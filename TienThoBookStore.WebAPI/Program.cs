@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using TienThoBookStore.Domain.Entities;
 using TienThoBookStore.Infrastructure.Contexts;
+using TienThoBookStore.Infrastructure.UnitOfWork;
 
 namespace TienThoBookStore.WebAPI
 {
@@ -14,6 +15,8 @@ namespace TienThoBookStore.WebAPI
 
             // Lấy chuỗi kết nối từ appsettings.json
             var connectionString = builder.Configuration.GetConnectionString("TienThoBookStoreConnection");
+
+            builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
             // Đăng ký DbContext với SQL Server
             builder.Services.AddDbContext<TienThoBookStoreDbContext>(options =>
