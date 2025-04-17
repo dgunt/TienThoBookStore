@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace TienThoBookStore.Infrastructure.Repositories
 {
-    public interface IGenericRepositoryy<T> where T : class
+    public interface IGenericRepository<T> where T : class
     {
         Task<T> GetByIdAsync(Guid id);
         Task<IEnumerable<T>> GetAllAsync();

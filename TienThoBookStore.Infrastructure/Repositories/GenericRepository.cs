@@ -9,7 +9,7 @@ using TienThoBookStore.Infrastructure.Contexts;
 
 namespace TienThoBookStore.Infrastructure.Repositories
 {
-    public class GenericRepository<T> : IGenericRepositoryy<T> where T : class
+    public class GenericRepository<T> : IGenericRepository<T> where T : class
     {
         protected readonly TienThoBookStoreDbContext _context;
 

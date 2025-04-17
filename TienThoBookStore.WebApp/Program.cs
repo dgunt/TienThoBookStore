@@ -1,3 +1,5 @@
+using System;
+
 namespace TienThoBookStore.WebApp
 {
     public class Program
@@ -8,6 +10,10 @@ namespace TienThoBookStore.WebApp
 
             // Add services to the container.
             builder.Services.AddControllersWithViews();
+            
+            builder.Services.AddHttpClient("BookApiClient", c =>
+    c.BaseAddress = new Uri(builder.Configuration["ApiBaseUrl"]));
+
 
             var app = builder.Build();
 

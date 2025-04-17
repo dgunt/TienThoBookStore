@@ -1,9 +1,15 @@
-﻿
+﻿using AutoMapper;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using TienThoBookStore.Domain.Entities;
 using TienThoBookStore.Infrastructure.Contexts;
 using TienThoBookStore.Infrastructure.UnitOfWork;
+using TienThoBookStore.Infrastructure.Repositories;
+using TienThoBookStore.Application.Services;
+using TienThoBookStore.Application.Mappings;
+using TienThoBookStore.Application.Services.Implementations;
+using TienThoBookStore.Application.Services.Interfaces;
+
 
 namespace TienThoBookStore.WebAPI
 {
@@ -16,11 +22,20 @@ namespace TienThoBookStore.WebAPI
             // Lấy chuỗi kết nối từ appsettings.json
             var connectionString = builder.Configuration.GetConnectionString("TienThoBookStoreConnection");
 
+            builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+            builder.Services.AddScoped<IBookService, BookService>();
+
 
             // Đăng ký DbContext với SQL Server
             builder.Services.AddDbContext<TienThoBookStoreDbContext>(options =>
                 options.UseSqlServer(connectionString));
+
+
+            //Đăng ký AutoMapper
+            builder.Services.AddAutoMapper(typeof(AutoMapperProfile).Assembly);
+
 
             // Cấu hình ASP.NET Core Identity
             builder.Services.AddIdentity<AppUser, IdentityRole<Guid>>(options =>
@@ -51,7 +66,8 @@ namespace TienThoBookStore.WebAPI
             }
 
             app.UseHttpsRedirection();
-
+            app.UseStaticFiles();
+            app.UseRouting();
             app.UseAuthorization();
 
 

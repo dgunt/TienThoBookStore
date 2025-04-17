@@ -23,6 +23,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\TienThoBookStore.Domain\TienThoBookStore.Domain.csproj" />
+    <ProjectReference Include="..\TienThoBookStore.Infrastructure\TienThoBookStore.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>
