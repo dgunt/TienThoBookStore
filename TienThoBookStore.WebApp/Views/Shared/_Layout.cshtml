@@ -5,68 +5,121 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <meta name="description" content="TienTho BookStore" />
     <title>Tiến Thọ BookStore</title>
-    <!-- Favicon-->
-    <link rel="icon" type="image/x-icon" href="~/assets/favicon.ico" />
-    <!-- Bootstrap icons-->
+    <link rel="icon" type="image/x-icon" href="~/favicon.ico" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css" rel="stylesheet" />
-    <!-- Core theme CSS (includes Bootstrap)-->
     <link href="~/css/styles.css" rel="stylesheet" />
+    <style>
+        /* Mình bổ sung CSS nhỏ cho header */
+        header.custom-header {
+          position: relative;
+            background: url('/assets/header-bg.jpg') no-repeat center/cover;
+          /* nếu bạn có ảnh nền header, đặt vào wwwroot/assets/header-bg.jpg */
+          background-color: #343a40;
+          background-blend-mode: overlay;
+          background-size: cover;
+          padding: 5rem 0;
+          color: #fff;
+          text-align: center;
+        }
+        header.custom-header .display-4 {
+          letter-spacing: .15rem;
+          font-weight: 700;
+        }
+        /* Search bar dưới header */
+        .search-bar {
+          background-color: #f8f9fa;
+          padding: 1rem 0;
+        }
+    </style>
 </head>
 <body>
     <!-- Navigation-->
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <div class="container px-4 px-lg-5">
-            <a class="navbar-brand" href="/">Tiến Thọ BookStore</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
-                    aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <a class="navbar-brand" href="@Url.Action("Index","Home")">Tiến Thọ BookStore</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+                    aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
+
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-4">
-                    <li class="nav-item"><a class="nav-link active" aria-current="page" href="/">Home</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#">About</a></li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" id="navbarDropdown" href="#" role="button"
-                           data-bs-toggle="dropdown" aria-expanded="false">Shop</a>
-                        <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                            <li><a class="dropdown-item" href="#">All Books</a></li>
-                            <li><hr class="dropdown-divider" /></li>
-                            <li><a class="dropdown-item" href="#">Popular</a></li>
-                        </ul>
-                    </li>
-                </ul>
-                <form class="d-flex">
-                    <button class="btn btn-outline-dark" type="submit">
-                        <i class="bi-cart-fill me-1"></i>
-                        Cart
-                        <span class="badge bg-dark text-white ms-1 rounded-pill">0</span>
-                    </button>
-                </form>
+                <div class="ms-auto d-flex align-items-center">
+                    @* Chỉ hiển thị khi đã login *@
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        <a class="nav-link me-3" href="@Url.Action("Library","Account")">Thư Viện Của Tôi</a>
+                        <a class="nav-link position-relative me-3" href="@Url.Action("Index","Cart")">
+                            <i class="bi-cart-fill"></i>
+                            <span class="badge bg-dark text-white rounded-pill position-absolute top-0 start-100 translate-middle">
+                                @ViewBag.CartCount
+                            </span>
+                        </a>
+                        <div class="dropdown">
+                            <a class="nav-link dropdown-toggle p-0" href="#" id="userDropdown" role="button"
+                               data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi-person-circle fs-4"></i>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                                <li><a class="dropdown-item" href="@Url.Action("Profile","Account")">Hồ sơ</a></li>
+                                <li><hr class="dropdown-divider" /></li>
+                                <li><a class="dropdown-item" href="@Url.Action("Logout","Account")">Đăng xuất</a></li>
+                            </ul>
+                        </div>
+                    }
+                    else
+                    {
+                        <a class="nav-link me-3" href="javascript:;"
+                           data-bs-toggle="modal" data-bs-target="#loginModal">
+                            Đăng nhập
+                        </a>
+
+                        <a class="nav-link" href="@Url.Action("Register","Account")">Đăng ký</a>
+                    }
+                </div>
             </div>
         </div>
     </nav>
-    <!-- Header-->
-    <header class="bg-dark py-5">
-        <div class="container px-4 px-lg-5 my-5">
-            <div class="text-center text-white">
-                <h1 class="display-4 fw-bolder">Tiến Thọ BookStore</h1>
-                <p class="lead fw-normal text-white-50 mb-0">Đọc sách online mọi lúc, mọi nơi</p>
-            </div>
+
+    <!-- Header được làm đẹp hơn -->
+    <header class="custom-header">
+        <div class="container px-4 px-lg-5">
+            <h1 class="display-4 fw-bolder">Tiến Thọ BookStore</h1>
+            <p class="lead fw-normal text-white-50 mb-0">Đọc sách online mọi lúc, mọi nơi</p>
         </div>
     </header>
+
+    <!-- Search bar dưới header -->
+    <div class="search-bar">
+        <div class="container">
+            <form class="d-flex justify-content-center" method="get" action="@Url.Action("Index","Book")">
+                <input class="form-control me-2 w-50" type="search" name="keyword" placeholder="Tìm sách..."
+                       value="@ViewBag.Keyword" />
+                <button class="btn btn-primary">Tìm</button>
+            </form>
+        </div>
+    </div>
+
     <!-- Main content -->
     <main>
         @RenderBody()
     </main>
+
     <!-- Footer-->
     <footer class="py-5 bg-dark">
         <div class="container">
             <p class="m-0 text-center text-white">© 2025 Tiến Thọ BookStore</p>
         </div>
     </footer>
-    <!-- Bootstrap core JS-->
+
+    @await Html.PartialAsync("_LoginModal", new TienThoBookStore.WebApp.Models.LoginViewModel())
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Core theme JS-->
     <script src="~/js/scripts.js"></script>
+    @* Nếu cần client‑side validation *@
+    <partial name="_ValidationScriptsPartial" />
+
+    @* Thêm dòng này để render @section Scripts trong view *@
+    @RenderSection("Scripts", required: false)
 </body>
 </html>

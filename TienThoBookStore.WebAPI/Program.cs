@@ -26,6 +26,8 @@ namespace TienThoBookStore.WebAPI
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
             builder.Services.AddScoped<IBookService, BookService>();
+            builder.Services.AddScoped<ICategoryService, CategoryService>();
+
 
 
             // Đăng ký DbContext với SQL Server

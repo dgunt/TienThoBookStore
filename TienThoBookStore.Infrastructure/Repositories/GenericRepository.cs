@@ -48,6 +48,9 @@ namespace TienThoBookStore.Infrastructure.Repositories
             return await _context.Set<T>().FindAsync(id);
         }
 
+        public IQueryable<T> Query()  // <-- hiện thực method mới
+        => _context.Set<T>().AsQueryable();
+
         public Task Update(T entity)
         {
             //throw new NotImplementedException();

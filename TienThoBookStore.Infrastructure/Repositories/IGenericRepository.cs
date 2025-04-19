@@ -11,6 +11,7 @@ namespace TienThoBookStore.Infrastructure.Repositories
     {
         Task<T> GetByIdAsync(Guid id);
         Task<IEnumerable<T>> GetAllAsync();
+        IQueryable<T> Query();
         Task AddAsync(T entity);
         Task Update(T entity);
         Task Delete(T entity);

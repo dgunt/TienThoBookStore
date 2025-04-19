@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -26,6 +27,23 @@ namespace TienThoBookStore.Application.Services.Implementations
         {
             var books = await _bookRepo.GetAllAsync();
             return _mapper.Map<IEnumerable<BookDTO>>(books);
+        }
+
+        public async Task<IEnumerable<BookDTO>> GetAllBooksAsync(int? categoryId = null)
+        {
+            var query = _bookRepo.Query();         // cần Query() trả về IQueryable<Book>
+            if (categoryId.HasValue)
+                query = query.Where(b => b.CategoryId == categoryId.Value);
+
+            var books = await query.ToListAsync();
+            return _mapper.Map<IEnumerable<BookDTO>>(books);
+        }
+
+        public async Task<BookDetailDTO?> GetBookByIdAsync(Guid bookId)
+        {
+            var book = await _bookRepo.GetByIdAsync(bookId); // giả sử repo có GetByIdAsync
+            if (book == null) return null;
+            return _mapper.Map<BookDetailDTO>(book);
         }
     }
 }

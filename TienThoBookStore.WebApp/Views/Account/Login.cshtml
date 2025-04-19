@@ -1,0 +1,22 @@
+﻿@model TienThoBookStore.WebApp.Models.LoginViewModel
+
+@{
+    Layout = "_Layout";                // ← Bắt buộc, để dùng layout chung
+    ViewData["Title"] = "Đăng nhập";
+}
+
+<!-- Khi trang này load (trường hợp login lỗi), tự động bật modal -->
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+          var el = document.getElementById('loginModal');
+          if (el) {
+            var modal = new bootstrap.Modal(el);
+            modal.show();
+          }
+        });
+    </script>
+}
+
+<!-- Chèn partial modal login -->
+@await Html.PartialAsync("_LoginModal", Model)

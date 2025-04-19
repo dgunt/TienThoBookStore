@@ -1,31 +1,59 @@
-﻿@model List<TienThoBookStore.Application.DTOs.BookDTO.BookDTO>
+﻿@model TienThoBookStore.WebApp.Models.BookCategoryViewModel
 
-<section class="py-5">
-    <div class="container px-4 px-lg-5 mt-5">
-        <div class="row gx-4 gx-lg-5 row-cols-2 row-cols-md-3 row-cols-xl-4 justify-content-center">
-            @foreach (var book in Model)
-            {
-                <div class="col mb-5">
-                    <div class="card h-100">
-                        <!-- Ảnh bìa -->
-                        <img class="card-img-top" src="@book.CoverImage" alt="@book.Title" />
-                        <!-- Chi tiết sách -->
-                        <div class="card-body p-4">
-                            <div class="text-center">
-                                <h5 class="fw-bolder">@book.Title</h5>
-                                <p class="text-muted mb-2">@book.Author</p>
-                                <strong>@String.Format("{0:N0} đ", book.Price)</strong>
+<div class="container px-4 px-lg-5 py-5">
+    <div class="row">
+        <!-- Sidebar danh mục (col-3) -->
+        <div class="col-md-3 mb-4">
+            <h5>Thể Loại</h5>
+            <ul class="list-group">
+                <li class="list-group-item @(Model.SelectedCategoryId==null ? "active" : "")">
+                    <a asp-action="Index" asp-route-categoryId="" class="text-decoration-none">
+                        Tất cả
+                    </a>
+                </li>
+                @foreach (var cat in Model.Categories)
+                {
+                    <li class="list-group-item @(Model.SelectedCategoryId==cat.CategoryId ? "active" : "")">
+                        <a asp-action="Index" asp-route-categoryId="@cat.CategoryId" class="text-decoration-none">
+                            @cat.Name
+                        </a>
+                    </li>
+                }
+            </ul>
+        </div>
+
+        <!-- Books grid (col-9) -->
+        <div class="col-md-9">
+            <div class="row row-cols-2 row-cols-md-3 row-cols-xl-4 g-4">
+                @foreach (var book in Model.Books)
+                {
+                    <div class="col mb-3">
+                        <div class="card h-100">
+                            <img class="card-img-top" src="@book.CoverImage" alt="@book.Title" />
+                            <div class="card-body text-center">
+                                <h6 class="fw-bolder">@book.Title</h6>
+                                <p class="text-muted small">@book.Author</p>
+                                <p class="text-danger">@String.Format("{0:N0} đ", book.Price)</p>
                             </div>
-                        </div>
-                        <!-- Actions -->
-                        <div class="card-footer p-4 pt-0 border-top-0 bg-transparent">
-                            <div class="text-center">
-                                <a class="btn btn-outline-dark mt-auto" href="#">Xem chi tiết</a>
+                            <!-- Thêm phần footer với nút Xem chi tiết -->
+                            <div class="card-footer p-4 pt-0 border-top-0 bg-transparent">
+                                <div class="text-center">
+                                    <a class="btn btn-outline-dark mt-auto"
+                                       asp-controller="Book"
+                                       asp-action="Details"
+                                       asp-route-id="@book.BookId">
+                                        Xem chi tiết
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            }
+                }
+                @if (!Model.Books.Any())
+                {
+                    <p class="text-center">Chưa có sách cho thể loại này.</p>
+                }
+            </div>
         </div>
     </div>
-</section>
+</div>

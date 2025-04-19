@@ -1,5 +1,5 @@
 using System;
-
+using Microsoft.AspNetCore.Authentication.Cookies;
 namespace TienThoBookStore.WebApp
 {
     public class Program
@@ -10,7 +10,13 @@ namespace TienThoBookStore.WebApp
 
             // Add services to the container.
             builder.Services.AddControllersWithViews();
-            
+            builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/Account/Login";
+        options.LogoutPath = "/Account/Logout";
+        options.ExpireTimeSpan = TimeSpan.FromHours(1);
+    });
             builder.Services.AddHttpClient("BookApiClient", c =>
     c.BaseAddress = new Uri(builder.Configuration["ApiBaseUrl"]));
 
@@ -27,9 +33,10 @@ namespace TienThoBookStore.WebApp
 
             app.UseHttpsRedirection();
             app.UseStaticFiles();
-
+            
             app.UseRouting();
 
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.MapControllerRoute(
