@@ -15,7 +15,7 @@ namespace TienThoBookStore.WebAPI
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
 
@@ -27,6 +27,8 @@ namespace TienThoBookStore.WebAPI
 
             builder.Services.AddScoped<IBookService, BookService>();
             builder.Services.AddScoped<ICategoryService, CategoryService>();
+            builder.Services.AddTransient<IEmailSender, SmtpEmailSender>();
+
 
 
 
@@ -50,6 +52,11 @@ namespace TienThoBookStore.WebAPI
             })
             .AddEntityFrameworkStores<TienThoBookStoreDbContext>()
             .AddDefaultTokenProviders();
+            
+            builder.Services.Configure<DataProtectionTokenProviderOptions>(opt =>
+            opt.TokenLifespan = TimeSpan.FromMinutes(5)  // token sống 5 phút
+);
+
 
             // Add services to the container.
 
@@ -59,6 +66,35 @@ namespace TienThoBookStore.WebAPI
             builder.Services.AddSwaggerGen();
 
             var app = builder.Build();
+
+            using (var scope = app.Services.CreateScope())
+            {
+                var roleMgr = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
+                var userMgr = scope.ServiceProvider.GetRequiredService<UserManager<AppUser>>();
+
+                // 1) Tạo role "Admin" nếu chưa có
+                if (!await roleMgr.RoleExistsAsync("Admin"))
+                    await roleMgr.CreateAsync(new IdentityRole<Guid>("Admin"));
+
+                // 2) Tạo user admin nếu chưa có
+                var adminEmail = "vuducminhvn2003@gmail.com";
+                var admin = await userMgr.FindByEmailAsync(adminEmail);
+                if (admin == null)
+                {
+                    admin = new AppUser
+                    {
+                        UserName = adminEmail,
+                        Email = adminEmail,
+                        EmailConfirmed = true,
+                        Name = "Administrator",    // admin luôn xác thực
+                        Verified = true,// nếu bạn dùng trường Verified
+                        CreatedAt = DateTime.UtcNow 
+                    };
+                    var result = await userMgr.CreateAsync(admin, "YourStrongP@ssw0rd!");
+                    if (result.Succeeded)
+                        await userMgr.AddToRoleAsync(admin, "Admin");
+                }
+            }
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
@@ -75,7 +111,7 @@ namespace TienThoBookStore.WebAPI
 
             app.MapControllers();
 
-            app.Run();
+            await app.RunAsync();
         }
     }
 }

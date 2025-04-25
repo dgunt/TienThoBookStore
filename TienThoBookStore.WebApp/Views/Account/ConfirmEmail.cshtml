@@ -1,0 +1,13 @@
+﻿@{
+    ViewData["Title"] = "Xác thực email";
+}
+<div class="container py-5">
+    <h3>@ViewBag.Message</h3>
+    @if (ViewBag.CanResend)
+    {
+        <form method="post" asp-action="ResendConfirmation">
+            <input type="hidden" name="email" value="@ViewBag.Email" />
+            <button type="submit" class="btn btn-secondary">Gửi lại email xác thực</button>
+        </form>
+    }
+</div>

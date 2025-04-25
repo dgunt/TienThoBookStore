@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using TienThoBookStore.Application.Services.Interfaces;
 using TienThoBookStore.Domain.Entities;
 
 namespace TienThoBookStore.WebAPI.Controllers
@@ -11,21 +12,27 @@ namespace TienThoBookStore.WebAPI.Controllers
     {
         private readonly UserManager<AppUser> _userManager;
         private readonly SignInManager<AppUser> _signInManager;
+        private readonly IEmailSender _emailSender;
 
-        public AccountController(UserManager<AppUser> userManager, SignInManager<AppUser> signInManager)
+        public AccountController(UserManager<AppUser> userManager
+            , SignInManager<AppUser> signInManager,
+            IEmailSender emailSender)
         {
             _userManager = userManager;
             _signInManager = signInManager;
+            _emailSender = emailSender;
         }
 
-        /// <summary>
-        /// Endpoint đăng ký người dùng mới
-        /// </summary>
+        // POST: api/Account/register
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterModel model)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
+
+            // 1) Kiểm trùng email sớm
+            if (await _userManager.FindByEmailAsync(model.Email) != null)
+                return BadRequest(new { Message = "Email đã được đăng ký." });
 
             var user = new AppUser
             {
@@ -34,32 +41,100 @@ namespace TienThoBookStore.WebAPI.Controllers
                 Name = model.Name,
                 PhoneNumber = model.Phone,
                 CreatedAt = DateTime.UtcNow,
-                Verified = false // Ban đầu chưa xác thực
+                EmailConfirmed = false,
+                Verified = false
             };
 
+            // 2) Tạo user
             var result = await _userManager.CreateAsync(user, model.Password);
-            if (result.Succeeded)
+            if (!result.Succeeded)
             {
-                // Bạn có thể thêm logic gửi email xác thực hoặc OTP tại đây nếu cần
-                return Ok(new { Message = "Đăng ký thành công!" });
+                var msg = string.Join("; ", result.Errors.Select(e => e.Description));
+                return BadRequest(new { Message = msg });
             }
 
-            foreach (var error in result.Errors)
-                ModelState.AddModelError("", error.Description);
+            // Sinh token và gửi email xác thực
+            var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+            var link = Url.Action(
+                nameof(ConfirmEmail), "Account",
+                new { userId = user.Id, token },
+                Request.Scheme);
 
-            return BadRequest(ModelState);
+            var html = $@"
+                <p>Chào {model.Name},</p>
+                <p>Click <a href=""{link}"">vào đây</a> để xác thực email. Link có giá trị 5 phút.</p>";
+
+            await _emailSender.SendAsync(model.Email, "Xác thực email Tiến Thọ", html);
+
+            return Ok(new { Message = "Đăng ký thành công! Vui lòng kiểm tra email để xác thực." });
         }
 
-        /// <summary>
-        /// Endpoint đăng nhập người dùng
-        /// </summary>
+        // GET: api/Account/confirm-email?userId={userId}&token={token}
+        [HttpGet("confirm-email")]
+        public async Task<IActionResult> ConfirmEmail(Guid userId, string token)
+        {
+            var user = await _userManager.FindByIdAsync(userId.ToString());
+            if (user == null)
+                return BadRequest("User không tồn tại.");
+
+            var res = await _userManager.ConfirmEmailAsync(user, token);
+            if (res.Succeeded)
+            {
+                user.Verified = true;                     // ← tự động bật flag
+                await _userManager.UpdateAsync(user);
+                return Ok("Email đã được xác thực thành công!");
+            }    
+               
+
+            if (res.Errors.Any(e => e.Code == "InvalidToken"))
+                return BadRequest(new { Message = "Link xác thực đã hết hạn.", CanResend = true });
+
+            return BadRequest("Xác thực email thất bại.");
+        }
+
+        // POST: api/Account/resend-confirmation
+        [HttpPost("resend-confirmation")]
+        public async Task<IActionResult> ResendConfirmation([FromBody] ResendDto dto)
+        {
+            var user = await _userManager.FindByEmailAsync(dto.Email);
+            if (user == null)
+                return BadRequest("Email không tồn tại.");
+            if (user.EmailConfirmed)
+                return BadRequest("Email đã được xác thực.");
+
+            var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+            var link = Url.Action(
+                nameof(ConfirmEmail), "Account",
+                new { userId = user.Id, token },
+                Request.Scheme);
+
+            var html = $@"
+                <p>Link mới: <a href=""{link}"">Click vào đây</a>. Có giá trị 5 phút.</p>";
+
+            await _emailSender.SendAsync(dto.Email, "Gửi lại xác thực email Tiến Thọ", html);
+
+            return Ok("Đã gửi lại email xác thực, vui lòng kiểm tra hộp thư.");
+        }
+
+        // POST: api/Account/login
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginModel model)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, isPersistent: false, lockoutOnFailure: false);
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user == null)
+                return Unauthorized(new { Message = "Sai thông tin đăng nhập!" });
+
+            if (!user.EmailConfirmed)
+                return BadRequest(new { Message = "Vui lòng xác thực email trước khi đăng nhập." });
+            if (!user.Verified)
+                return BadRequest(new { Message = "Tài khoản đang chờ admin phê duyệt." });
+
+            var result = await _signInManager.PasswordSignInAsync(
+                model.Email, model.Password, isPersistent: false, lockoutOnFailure: false);
+
             if (result.Succeeded)
                 return Ok(new { Message = "Đăng nhập thành công!" });
 
@@ -75,7 +150,10 @@ namespace TienThoBookStore.WebAPI.Controllers
         public string Phone { get; set; }
         public string Password { get; set; }
     }
-
+    public class ResendDto
+    {
+        public string Email { get; set; } = "";
+    }
     public class LoginModel
     {
         public string Email { get; set; }

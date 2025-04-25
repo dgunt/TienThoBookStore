@@ -74,7 +74,10 @@
                             Đăng nhập
                         </a>
 
-                        <a class="nav-link" href="@Url.Action("Register","Account")">Đăng ký</a>
+                        <a class="nav-link" href="javascript:;"
+                           data-bs-toggle="modal" data-bs-target="#registerModal">
+                            Đăng ký
+                        </a>
                     }
                 </div>
             </div>
@@ -113,7 +116,7 @@
     </footer>
 
     @await Html.PartialAsync("_LoginModal", new TienThoBookStore.WebApp.Models.LoginViewModel())
-
+    @await Html.PartialAsync("_RegisterModal", new TienThoBookStore.WebApp.Models.RegisterViewModel())
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/scripts.js"></script>
     @* Nếu cần client‑side validation *@
