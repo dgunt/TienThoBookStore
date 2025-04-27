@@ -47,6 +47,7 @@ namespace TienThoBookStore.WebAPI.Controllers
                 Name = model.Name,
                 PhoneNumber = model.Phone,
                 CreatedAt = DateTime.UtcNow,
+                EmailConfirmationSentAt = DateTime.UtcNow,
                 EmailConfirmed = false,
                 Verified = false
             };
@@ -119,6 +120,10 @@ namespace TienThoBookStore.WebAPI.Controllers
 
             await _emailSender.SendAsync(dto.Email, "Gửi lại xác thực email Tiến Thọ", html);
 
+            // 2) CẬP NHẬT lại thời điểm gửi token
+            user.EmailConfirmationSentAt = DateTime.UtcNow;
+            await _userManager.UpdateAsync(user);
+
             return Ok(new { Message = "Đã gửi lại email xác thực, vui lòng kiểm tra hộp thư." });
 
         }
@@ -142,7 +147,26 @@ namespace TienThoBookStore.WebAPI.Controllers
                 return Unauthorized(new { Message = "Sai thông tin đăng nhập!" });
 
             if (!user.EmailConfirmed)
-                return BadRequest(new { Message = "Vui lòng xác thực email trước khi đăng nhập.", CanResend = true });
+            {
+                var sinceLastSent = DateTime.UtcNow - user.EmailConfirmationSentAt;
+                if (sinceLastSent <= TimeSpan.FromMinutes(5))
+                {
+                    // link mới còn hạn → chỉ show message
+                    return BadRequest(new
+                    {
+                        Message = "Vui lòng kiểm tra email để xác thực tài khoản."
+                    });
+                }
+                else
+                {
+                    // link hết hạn → cho phép resend
+                    return BadRequest(new
+                    {
+                        Message = "Link xác thực đã hết hạn.",
+                        CanResend = true
+                    });
+                }
+            }
             if (!user.Verified)
                 return BadRequest(new { Message = "Tài khoản đang chờ admin phê duyệt." });
 

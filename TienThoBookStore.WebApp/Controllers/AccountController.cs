@@ -17,11 +17,17 @@ namespace TienThoBookStore.WebApp.Controllers
         [HttpPost]
         public async Task<IActionResult> Register(RegisterViewModel vm)
         {
+            // 1) Nếu ModelState không hợp lệ (ví dụ thiếu trường, format sai)
             if (!ModelState.IsValid)
+            {
+                // Trả về 400 để client-side AJAX vào .fail() và render lại partial
+                Response.StatusCode = StatusCodes.Status400BadRequest;
                 return PartialView("_RegisterModalContent", vm);
+            }
 
+            // 2) Gọi API tạo tài khoản
             var client = _httpFactory.CreateClient("BookApiClient");
-            var res = await client.PostAsJsonAsync("api/Account/register", new
+            var apiRes = await client.PostAsJsonAsync("api/Account/register", new
             {
                 Name = vm.Name,
                 Email = vm.Email,
@@ -29,15 +35,26 @@ namespace TienThoBookStore.WebApp.Controllers
                 Password = vm.Password
             });
 
-            if (!res.IsSuccessStatusCode)
+            // 3) Nếu API trả về lỗi (email trùng, lỗi khác)
+            if (!apiRes.IsSuccessStatusCode)
             {
-                var err = await res.Content.ReadFromJsonAsync<ErrorResponse>()
+                // Đọc message từ API (anonymous JSON hoặc ErrorResponse)
+                var err = await apiRes.Content.ReadFromJsonAsync<ErrorResponse>()
                           ?? new ErrorResponse { Message = "Đăng ký thất bại." };
-                ModelState.AddModelError("", err.Message);
+
+                // Nếu lỗi do email đã tồn tại, gán vào field Email để hiển thị ngay dưới ô Email
+                if (err.Message.Contains("Email đã được đăng ký"))
+                    ModelState.AddModelError(nameof(vm.Email), "Email đã được đăng ký.");
+                else
+                    // Lỗi chung (ví dụ password không đạt yêu cầu)
+                    ModelState.AddModelError(string.Empty, err.Message);
+
+                // Trả về PartialView với status 400
+                Response.StatusCode = StatusCodes.Status400BadRequest;
                 return PartialView("_RegisterModalContent", vm);
             }
 
-            // thành công → trả JSON
+            // 4) Thành công → trả JSON 200
             return Json(new { Success = true });
         }
 
@@ -68,21 +85,39 @@ namespace TienThoBookStore.WebApp.Controllers
         [HttpPost]
         public async Task<IActionResult> ResendConfirmation(ConfirmEmailViewModel vm)
         {
+            // 1) Nếu form không hợp lệ → trả về PartialView + 400
             if (!ModelState.IsValid)
+            {
+                Response.StatusCode = StatusCodes.Status400BadRequest;
                 return PartialView("_ResendModal", vm);
+            }
 
+            // 2) Gọi API để gửi lại link xác thực
             var client = _httpFactory.CreateClient("BookApiClient");
-            var res = await client.PostAsJsonAsync("api/Account/resend-confirmation", new
+            var apiRes = await client.PostAsJsonAsync("api/Account/resend-confirmation", new
             {
                 Email = vm.Email
             });
-            var data = await res.Content.ReadFromJsonAsync<ErrorResponse>();
-            if (!res.IsSuccessStatusCode)
+
+            // Đọc JSON lỗi hoặc message từ API
+            var data = await apiRes.Content.ReadFromJsonAsync<ErrorResponse>();
+
+            // 3) Nếu API trả về lỗi (400)… → JSON { Message } + 400
+            if (!apiRes.IsSuccessStatusCode)
             {
-                return Json(new { Success = false, Message = data?.Message ?? "Gửi lại thất bại." });
+                // BadRequestResult tự set status 400
+                return BadRequest(new
+                {
+                    Message = data?.Message ?? "Gửi lại thất bại."
+                });
             }
 
-            return Json(new { Success = true, Message = data.Message });
+            // 4) Thành công → JSON { Success = true, Message } + 200
+            return Ok(new
+            {
+                Success = true,
+                Message = data.Message
+            });
         }
 
         // POST: /Account/Login
@@ -131,10 +166,12 @@ namespace TienThoBookStore.WebApp.Controllers
                     CanResend = true
                 });
 
-            // những lỗi khác (mật khẩu sai / chưa có user / chờ duyệt)
-            // trả partial HTML để replace modal body và show validation errors
-            ModelState.AddModelError("", err.Message);
-            return PartialView("_LoginModalContent", vm);
+            return Json(new
+            {
+                Success = false,
+                Message = err.Message
+            });
+
         }
 
         // GET: /Account/Login (hiển thị modal)

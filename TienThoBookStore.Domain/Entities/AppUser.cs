@@ -15,6 +15,7 @@ namespace TienThoBookStore.Domain.Entities
         public string? Role { get; set; }       // Cho phép null nếu không cung cấp
         public bool Verified { get; set; }     // Sử dụng cho việc xác thực, ví dụ: OTP
         public DateTime CreatedAt { get; set; }
+        public DateTime EmailConfirmationSentAt { get; set; }
 
         // Navigation Properties:
         // Một người dùng có thể có nhiều đánh giá (Reviews)

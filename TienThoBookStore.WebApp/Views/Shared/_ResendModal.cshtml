@@ -1,15 +1,44 @@
-﻿@model ConfirmEmailViewModel
-<div class="modal fade" id="resendModal" tabindex="-1">
+﻿@model TienThoBookStore.WebApp.Models.ConfirmEmailViewModel
+
+<div class="modal fade" id="resendModal" tabindex="-1" aria-labelledby="resendModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header">…</div>
+
+            <!-- modal header với title + nút đóng -->
+            <div class="modal-header">
+                <h5 class="modal-title" id="resendModalLabel">Gửi lại email xác thực</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+
             <div class="modal-body">
-                <form id="resendForm" asp-action="ResendConfirmation" method="post">
-                    <div data-valmsg-summary="ModelOnly" class="text-danger"></div>
-                    <input asp-for="Email" class="form-control" />
+                <form id="resendForm"
+                      asp-controller="Account"
+                      asp-action="ResendConfirmation"
+                      method="post">
+                    @* nếu bạn có @ValidateAntiForgeryToken trên action thì thêm: *@
+                    @Html.AntiForgeryToken()
+
+                    @* summary để script showSummary() chèn lỗi vào đây *@
+                    <div data-valmsg-summary="true" class="text-danger mb-2"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="Email" class="form-label"></label>
+                        <input asp-for="Email"
+                               class="form-control"
+                               placeholder="Nhập email của bạn…" />
+                        <span asp-validation-for="Email" class="text-danger"></span>
+                    </div>
                 </form>
             </div>
-            <div class="modal-footer"><button form="resendForm">Gửi lại</button></div>
+
+            <div class="modal-footer">
+                <button type="submit"
+                        form="resendForm"
+                        class="btn btn-primary">
+                    Gửi lại
+                </button>
+            </div>
+
         </div>
     </div>
 </div>

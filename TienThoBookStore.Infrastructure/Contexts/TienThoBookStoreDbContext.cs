@@ -273,6 +273,9 @@ namespace TienThoBookStore.Infrastructure.Contexts
                 entity.Property(u => u.CreatedAt)
                       .HasColumnName("createdAt")
                       .HasDefaultValueSql("GETDATE()");
+                entity.Property(u=>u.EmailConfirmationSentAt)
+                .HasColumnName("emailConfirmationSentAt")
+                .HasDefaultValueSql("GETDATE()");
             });
 
             // Thay đổi tên các bảng Identity mặc định nếu cần

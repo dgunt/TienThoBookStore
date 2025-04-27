@@ -11,24 +11,25 @@
     <style>
         /* Mình bổ sung CSS nhỏ cho header */
         header.custom-header {
-          position: relative;
+            position: relative;
             background: url('/assets/header-bg.jpg') no-repeat center/cover;
-          /* nếu bạn có ảnh nền header, đặt vào wwwroot/assets/header-bg.jpg */
-          background-color: #343a40;
-          background-blend-mode: overlay;
-          background-size: cover;
-          padding: 5rem 0;
-          color: #fff;
-          text-align: center;
+            /* nếu bạn có ảnh nền header, đặt vào wwwroot/assets/header-bg.jpg */
+            background-color: #343a40;
+            background-blend-mode: overlay;
+            background-size: cover;
+            padding: 5rem 0;
+            color: #fff;
+            text-align: center;
         }
-        header.custom-header .display-4 {
-          letter-spacing: .15rem;
-          font-weight: 700;
-        }
+
+            header.custom-header .display-4 {
+                letter-spacing: .15rem;
+                font-weight: 700;
+            }
         /* Search bar dưới header */
         .search-bar {
-          background-color: #f8f9fa;
-          padding: 1rem 0;
+            background-color: #f8f9fa;
+            padding: 1rem 0;
         }
     </style>
 </head>
@@ -118,7 +119,7 @@
     @await Html.PartialAsync("_LoginModal", new LoginViewModel())
     @await Html.PartialAsync("_RegisterModal", new RegisterViewModel())
     @await Html.PartialAsync("_ResendModal", new ConfirmEmailViewModel())
-    
+
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
 
@@ -141,28 +142,40 @@
                 data:     $f.serialize(),
                 dataType: "json"
               })
-              .done(function(resp){
-                // 1) nếu thành công hoàn toàn
-                if (resp.Success === true) {
-                  if (formId === "registerForm") {
-                    // sau đăng ký thành công: chuyển sang page xác nhận
-                    window.location = "/Account/RegisterConfirmation";
-                  } else {
-                    // sau login thành công: đóng modal + reload để cập nhật nav
-                    $(modalSel).modal("hide");
-                    location.reload();
-                  }
-                }
-                // 2) nếu API báo cần resend (link hết hạn)
-                else if (resp.CanResend === true) {
-                  $(modalSel).modal("hide");
-                  $("#resendModal").modal("show");
-                }
-                // 3) còn lại: show lỗi chung
-                else {
-                  showSummary(modalSel, resp.Message || "Có lỗi xảy ra.");
-                }
-              })
+             .done(function(resp){
+              // hỗ trợ camelCase và PascalCase
+              var success   = resp.Success   === true || resp.success   === true;
+              var canResend = resp.CanResend === true || resp.canResend === true;
+              var message   = resp.Message   || resp.message || "Có lỗi xảy ra.";
+
+                if (success) {
+                // --- REGISTER thành công ---
+                if (formId === "registerForm") {
+              $("#registerModal").modal("hide");
+              window.location = "/Account/RegisterConfirmation";
+            }
+                // --- LOGIN thành công ---
+                else if (formId === "loginForm") {
+                $("#loginModal").modal("hide");
+                location.reload(); // reload để show "Thư viện của tôi" + icon user
+            }
+            // --- RESEND thành công ---
+            else if (formId === "resendForm") {
+              $("#resendModal").modal("hide");
+              alert(message); // thông báo đã gửi mail thành công
+            }
+          }
+          // link xác thực hết hạn → show modal resend
+          else if (canResend && message.includes("hết hạn")) {
+            $(modalSel).modal("hide");
+            $("#resendModal").modal("show");
+          }
+          // lỗi thông thường → show summary trong modal hiện tại
+          else {
+            showSummary(modalSel, message);
+          }
+        })
+
               .fail(function(xhr){
                 var ct = (xhr.getResponseHeader("Content-Type")||"").toLowerCase();
                 // nếu trả về partial HTML (validation lỗi) thì replace nội dung modal
