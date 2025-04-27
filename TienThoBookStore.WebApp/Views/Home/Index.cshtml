@@ -5,21 +5,22 @@
         <!-- Sidebar danh mục (col-3) -->
         <div class="col-md-3 mb-4">
             <h5>Thể Loại</h5>
-            <ul class="list-group">
-                <li class="list-group-item @(Model.SelectedCategoryId==null ? "active" : "")">
-                    <a asp-action="Index" asp-route-categoryId="" class="text-decoration-none">
-                        Tất cả
-                    </a>
-                </li>
+            <div class="list-group">
+                <a asp-action="Index"
+                   asp-route-categoryId=""
+                   class="list-group-item list-group-item-action @(Model.SelectedCategoryId==null ? "active" : "")">
+                    Tất cả
+                </a>
                 @foreach (var cat in Model.Categories)
                 {
-                    <li class="list-group-item @(Model.SelectedCategoryId==cat.CategoryId ? "active" : "")">
-                        <a asp-action="Index" asp-route-categoryId="@cat.CategoryId" class="text-decoration-none">
-                            @cat.Name
-                        </a>
-                    </li>
+                    var isActive = Model.SelectedCategoryId == cat.CategoryId;
+                    <a asp-action="Index"
+                       asp-route-categoryId="@cat.CategoryId"
+                       class="list-group-item list-group-item-action @(isActive ? "active" : "")">
+                        @cat.Name
+                    </a>
                 }
-            </ul>
+            </div>
         </div>
 
         <!-- Books grid (col-9) -->

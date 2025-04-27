@@ -115,14 +115,95 @@
         </div>
     </footer>
 
-    @await Html.PartialAsync("_LoginModal", new TienThoBookStore.WebApp.Models.LoginViewModel())
-    @await Html.PartialAsync("_RegisterModal", new TienThoBookStore.WebApp.Models.RegisterViewModel())
+    @await Html.PartialAsync("_LoginModal", new LoginViewModel())
+    @await Html.PartialAsync("_RegisterModal", new RegisterViewModel())
+    @await Html.PartialAsync("_ResendModal", new ConfirmEmailViewModel())
+    
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/scripts.js"></script>
+
+    <!-- sau khi đã include jQuery + Bootstrap JS, ngay trước </body> -->
+    <!-- sau khi đã include jQuery & Bootstrap.bundle.js -->
+    <script>
+        $(function(){
+          function showSummary(modalSel, msg){
+            $(modalSel + ' [data-valmsg-summary="true"]')
+              .html('<div class="text-danger">'+ msg +'</div>');
+          }
+
+          function bindModal(modalSel, formId){
+            $(document).on("submit", "#" + formId, function(e){
+              e.preventDefault();
+              var $f = $(this);
+              $.ajax({
+                url:      $f.attr("action"),
+                type:     $f.attr("method") || "POST",
+                data:     $f.serialize(),
+                dataType: "json"
+              })
+              .done(function(resp){
+                // 1) nếu thành công hoàn toàn
+                if (resp.Success === true) {
+                  if (formId === "registerForm") {
+                    // sau đăng ký thành công: chuyển sang page xác nhận
+                    window.location = "/Account/RegisterConfirmation";
+                  } else {
+                    // sau login thành công: đóng modal + reload để cập nhật nav
+                    $(modalSel).modal("hide");
+                    location.reload();
+                  }
+                }
+                // 2) nếu API báo cần resend (link hết hạn)
+                else if (resp.CanResend === true) {
+                  $(modalSel).modal("hide");
+                  $("#resendModal").modal("show");
+                }
+                // 3) còn lại: show lỗi chung
+                else {
+                  showSummary(modalSel, resp.Message || "Có lỗi xảy ra.");
+                }
+              })
+              .fail(function(xhr){
+                var ct = (xhr.getResponseHeader("Content-Type")||"").toLowerCase();
+                // nếu trả về partial HTML (validation lỗi) thì replace nội dung modal
+                if (ct.indexOf("text/html") === 0) {
+                  $(modalSel + " .modal-dialog").html(xhr.responseText);
+                }
+                // nếu trả về JSON lỗi (400,401) thì show message
+                else {
+                  var err = xhr.responseJSON || JSON.parse(xhr.responseText);
+                  showSummary(modalSel, err.Message || "Có lỗi xảy ra.");
+                }
+              });
+            });
+          }
+
+          bindModal("#loginModal",    "loginForm");
+          bindModal("#registerModal", "registerForm");
+          bindModal("#resendModal",   "resendForm");
+        });
+    </script>
+
+
+
+
+
+
+
     @* Nếu cần client‑side validation *@
     <partial name="_ValidationScriptsPartial" />
 
     @* Thêm dòng này để render @section Scripts trong view *@
     @RenderSection("Scripts", required: false)
+    @if (TempData["ResendMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show position-fixed top-0 end-0 m-3" role="alert">
+            @TempData["ResendMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
 </body>
 </html>
+
+
+

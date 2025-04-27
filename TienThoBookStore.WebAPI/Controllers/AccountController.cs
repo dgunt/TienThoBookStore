@@ -28,7 +28,13 @@ namespace TienThoBookStore.WebAPI.Controllers
         public async Task<IActionResult> Register([FromBody] RegisterModel model)
         {
             if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            {
+                var errors = string.Join("; ",
+                    ModelState.Values
+                              .SelectMany(v => v.Errors)
+                              .Select(e => e.ErrorMessage));
+                return BadRequest(new { Message = $"Dữ liệu không hợp lệ: {errors}" });
+            }
 
             // 1) Kiểm trùng email sớm
             if (await _userManager.FindByEmailAsync(model.Email) != null)
@@ -75,21 +81,21 @@ namespace TienThoBookStore.WebAPI.Controllers
         {
             var user = await _userManager.FindByIdAsync(userId.ToString());
             if (user == null)
-                return BadRequest("User không tồn tại.");
+                return BadRequest(new { Message = "User không tồn tại. " });
 
             var res = await _userManager.ConfirmEmailAsync(user, token);
             if (res.Succeeded)
             {
                 user.Verified = true;                     // ← tự động bật flag
                 await _userManager.UpdateAsync(user);
-                return Ok("Email đã được xác thực thành công!");
+                return Ok(new { Message = "Email đã được xác thực thành công!" });
             }    
                
 
             if (res.Errors.Any(e => e.Code == "InvalidToken"))
                 return BadRequest(new { Message = "Link xác thực đã hết hạn.", CanResend = true });
 
-            return BadRequest("Xác thực email thất bại.");
+            return BadRequest(new { Message = "Xác thực email thất bại." });
         }
 
         // POST: api/Account/resend-confirmation
@@ -98,9 +104,9 @@ namespace TienThoBookStore.WebAPI.Controllers
         {
             var user = await _userManager.FindByEmailAsync(dto.Email);
             if (user == null)
-                return BadRequest("Email không tồn tại.");
+                return BadRequest(new { Message = "Email không tồn tại" });
             if (user.EmailConfirmed)
-                return BadRequest("Email đã được xác thực.");
+                return BadRequest(new { Message = "Email đã được xác thực" });
 
             var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
             var link = Url.Action(
@@ -113,7 +119,8 @@ namespace TienThoBookStore.WebAPI.Controllers
 
             await _emailSender.SendAsync(dto.Email, "Gửi lại xác thực email Tiến Thọ", html);
 
-            return Ok("Đã gửi lại email xác thực, vui lòng kiểm tra hộp thư.");
+            return Ok(new { Message = "Đã gửi lại email xác thực, vui lòng kiểm tra hộp thư." });
+
         }
 
         // POST: api/Account/login
@@ -121,14 +128,21 @@ namespace TienThoBookStore.WebAPI.Controllers
         public async Task<IActionResult> Login([FromBody] LoginModel model)
         {
             if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            {
+                var errors = string.Join("; ",
+                    ModelState.Values
+                              .SelectMany(v => v.Errors)
+                              .Select(e => e.ErrorMessage));
+                return BadRequest(new { Message = $"Dữ liệu không hợp lệ: {errors}" });
+            }
+
 
             var user = await _userManager.FindByEmailAsync(model.Email);
             if (user == null)
                 return Unauthorized(new { Message = "Sai thông tin đăng nhập!" });
 
             if (!user.EmailConfirmed)
-                return BadRequest(new { Message = "Vui lòng xác thực email trước khi đăng nhập." });
+                return BadRequest(new { Message = "Vui lòng xác thực email trước khi đăng nhập.", CanResend = true });
             if (!user.Verified)
                 return BadRequest(new { Message = "Tài khoản đang chờ admin phê duyệt." });
 

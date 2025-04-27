@@ -1,0 +1,15 @@
+﻿@model ConfirmEmailViewModel
+<div class="modal fade" id="resendModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">…</div>
+            <div class="modal-body">
+                <form id="resendForm" asp-action="ResendConfirmation" method="post">
+                    <div data-valmsg-summary="ModelOnly" class="text-danger"></div>
+                    <input asp-for="Email" class="form-control" />
+                </form>
+            </div>
+            <div class="modal-footer"><button form="resendForm">Gửi lại</button></div>
+        </div>
+    </div>
+</div>

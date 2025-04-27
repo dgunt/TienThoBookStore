@@ -1,39 +1,7 @@
-﻿@model RegisterViewModel
+﻿@model TienThoBookStore.WebApp.Models.RegisterViewModel
+
 <div class="modal fade" id="registerModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Đăng ký</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form asp-controller="Account" asp-action="Register" method="post" id="registerForm">
-                    <div asp-validation-summary="All" class="text-danger"></div>
-                    <div class="mb-3">
-                        <label asp-for="Email"></label>
-                        <input asp-for="Email" class="form-control" /><span asp-validation-for="Email" class="text-danger"></span>
-                    </div>
-                    <div class="mb-3">
-                        <label asp-for="Password"></label>
-                        <input asp-for="Password" class="form-control" /><span asp-validation-for="Password" class="text-danger"></span>
-                    </div>
-                    <div class="mb-3">
-                        <label asp-for="ConfirmPassword"></label>
-                        <input asp-for="ConfirmPassword" class="form-control" /><span asp-validation-for="ConfirmPassword" class="text-danger"></span>
-                    </div>
-                    <div class="mb-3">
-                        <label asp-for="Name"></label>
-                        <input asp-for="Name" class="form-control" /><span asp-validation-for="Name" class="text-danger"></span>
-                    </div>
-                    <div class="mb-3">
-                        <label asp-for="Phone"></label>
-                        <input asp-for="Phone" class="form-control" /><span asp-validation-for="Phone" class="text-danger"></span>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="submit" form="registerForm" class="btn btn-primary">Đăng ký</button>
-            </div>
-        </div>
+        @await Html.PartialAsync("_RegisterModalContent", Model)
     </div>
 </div>

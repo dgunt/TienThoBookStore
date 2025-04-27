@@ -1,0 +1,46 @@
+﻿@model TienThoBookStore.WebApp.Models.RegisterViewModel
+
+<div class="modal-content">
+    <div class="modal-header">
+        <h5 class="modal-title">Đăng ký</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    </div>
+    <div class="modal-body">
+        <form id="registerForm"
+              asp-controller="Account"
+              asp-action="Register"
+              method="post"
+              novalidate>
+            <div data-valmsg-summary="true" class="text-danger mb-3"></div>
+
+            <div class="mb-3">
+                <label asp-for="Email"></label>
+                <input asp-for="Email" class="form-control" />
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Password"></label>
+                <input asp-for="Password" type="password" class="form-control" />
+                <span asp-validation-for="Password" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="ConfirmPassword"></label>
+                <input asp-for="ConfirmPassword" type="password" class="form-control" />
+                <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Name"></label>
+                <input asp-for="Name" class="form-control" />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Phone"></label>
+                <input asp-for="Phone" class="form-control" />
+                <span asp-validation-for="Phone" class="text-danger"></span>
+            </div>
+        </form>
+    </div>
+    <div class="modal-footer">
+        <button type="submit" form="registerForm" class="btn btn-primary">Đăng ký</button>
+    </div>
+</div>

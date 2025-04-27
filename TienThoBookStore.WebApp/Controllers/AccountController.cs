@@ -13,47 +13,32 @@ namespace TienThoBookStore.WebApp.Controllers
         public AccountController(IHttpClientFactory httpFactory)
             => _httpFactory = httpFactory;
 
-        // POST: /Account/Register (từ modal _RegisterModal)
+        // POST: /Account/Register
         [HttpPost]
         public async Task<IActionResult> Register(RegisterViewModel vm)
         {
             if (!ModelState.IsValid)
-                return PartialView("_RegisterModal", vm);
+                return PartialView("_RegisterModalContent", vm);
 
             var client = _httpFactory.CreateClient("BookApiClient");
-            var dto = new
+            var res = await client.PostAsJsonAsync("api/Account/register", new
             {
                 Name = vm.Name,
                 Email = vm.Email,
                 Phone = vm.Phone,
                 Password = vm.Password
-            };
-
-            var res = await client.PostAsJsonAsync("api/Account/register", dto);
+            });
 
             if (!res.IsSuccessStatusCode)
             {
-                // parse JSON { Message = "..."} hoặc plain text
-                string errorMsg;
-                var ct = res.Content.Headers.ContentType?.MediaType;
-                if (ct == "application/json")
-                {
-                    var obj = await res.Content.ReadFromJsonAsync<Dictionary<string, string>>();
-                    errorMsg = obj != null && obj.TryGetValue("Message", out var m) ? m : "Đăng ký thất bại.";
-                }
-                else
-                {
-                    errorMsg = await res.Content.ReadAsStringAsync();
-                }
-                ModelState.AddModelError("", errorMsg);
-                return PartialView("_RegisterModal", vm);
+                var err = await res.Content.ReadFromJsonAsync<ErrorResponse>()
+                          ?? new ErrorResponse { Message = "Đăng ký thất bại." };
+                ModelState.AddModelError("", err.Message);
+                return PartialView("_RegisterModalContent", vm);
             }
 
-            // thành công: đọc JSON { Message = "..."}
-            var data = await res.Content.ReadFromJsonAsync<Dictionary<string, string>>();
-            ViewBag.Message = data != null && data.TryGetValue("Message", out var m2) ? m2 : "Đăng ký thành công!";
-            return View("RegisterConfirmation");
-
+            // thành công → trả JSON
+            return Json(new { Success = true });
         }
 
         // GET: /Account/RegisterConfirmation
@@ -61,91 +46,103 @@ namespace TienThoBookStore.WebApp.Controllers
         public IActionResult RegisterConfirmation()
             => View();
 
-        // GET: /Account/ConfirmEmail?userId=...&token=...
+        // GET: /Account/ConfirmEmail
         [HttpGet]
         public async Task<IActionResult> ConfirmEmail(Guid userId, string token)
         {
             var client = _httpFactory.CreateClient("BookApiClient");
-            var url = $"api/Account/confirm-email?userId={userId}&token={Uri.EscapeDataString(token)}";
-            var res = await client.GetAsync(url);
+            var res = await client.GetAsync(
+                            $"api/Account/confirm-email?userId={userId}&token={Uri.EscapeDataString(token)}");
+            var data = await res.Content.ReadFromJsonAsync<ErrorResponse>();
 
-            if (res.IsSuccessStatusCode)
+            var vm = new ConfirmEmailViewModel
             {
-                ViewBag.Message = await res.Content.ReadAsStringAsync();
-            }
-            else
-            {
-                var err = await res.Content.ReadFromJsonAsync<ErrorResponse>();
-                ViewBag.Message = err?.Message;
-                ViewBag.CanResend = err?.CanResend ?? false;
-            }
-
-            return View("ConfirmEmail");
+                Message = data?.Message ?? "",
+                CanResend = data?.CanResend ?? false,
+                Email = ""  // user sẽ nhập nếu cần resend
+            };
+            return View(vm);
         }
 
         // POST: /Account/ResendConfirmation
         [HttpPost]
-        public async Task<IActionResult> ResendConfirmation(string email)
+        public async Task<IActionResult> ResendConfirmation(ConfirmEmailViewModel vm)
         {
-            if (string.IsNullOrWhiteSpace(email))
-            {
-                ModelState.AddModelError("", "Vui lòng nhập email để gửi lại.");
-                return View("ConfirmEmail");
-            }
+            if (!ModelState.IsValid)
+                return PartialView("_ResendModal", vm);
 
             var client = _httpFactory.CreateClient("BookApiClient");
-            var res = await client.PostAsJsonAsync("api/Account/resend-confirmation", new { Email = email });
+            var res = await client.PostAsJsonAsync("api/Account/resend-confirmation", new
+            {
+                Email = vm.Email
+            });
+            var data = await res.Content.ReadFromJsonAsync<ErrorResponse>();
+            if (!res.IsSuccessStatusCode)
+            {
+                return Json(new { Success = false, Message = data?.Message ?? "Gửi lại thất bại." });
+            }
 
-            ViewBag.Message = await res.Content.ReadAsStringAsync();
-            ViewBag.CanResend = false;
-            return View("ConfirmEmail");
+            return Json(new { Success = true, Message = data.Message });
         }
 
-        // GET: /Account/Login  (dùng modal _LoginModal)
+        // POST: /Account/Login
+        [HttpPost]
+        public async Task<IActionResult> Login(LoginViewModel vm)
+        {
+            // 1) Kiểm ModelState
+            if (!ModelState.IsValid)
+            {
+                return PartialView("_LoginModalContent", vm);
+            }
+
+            // 2) Gọi API login
+            var client = _httpFactory.CreateClient("BookApiClient");
+            var res = await client.PostAsJsonAsync("api/Account/login", new
+            {
+                Email = vm.EmailOrUserName,
+                Password = vm.Password
+            });
+
+            // nếu 2xx, coi là Success
+            if (res.IsSuccessStatusCode)
+            {
+                // tạo cookie
+                var claims = new List<Claim> { new Claim(ClaimTypes.Name, vm.EmailOrUserName) };
+                var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+                await HttpContext.SignInAsync(
+                    CookieAuthenticationDefaults.AuthenticationScheme,
+                    new ClaimsPrincipal(identity),
+                    new AuthenticationProperties { IsPersistent = vm.RememberMe }
+                );
+                // trả JSON success
+                return Json(new { Success = true });
+            }
+
+            // đọc JSON lỗi
+            var err = await res.Content.ReadFromJsonAsync<ErrorResponse>()
+                      ?? new ErrorResponse { Message = "Đăng nhập thất bại." };
+
+            // nếu API báo canResend, ta trả JSON để JS biết phải show modal resend
+            if (err.CanResend)
+                return Json(new
+                {
+                    Success = false,
+                    Message = err.Message,
+                    CanResend = true
+                });
+
+            // những lỗi khác (mật khẩu sai / chưa có user / chờ duyệt)
+            // trả partial HTML để replace modal body và show validation errors
+            ModelState.AddModelError("", err.Message);
+            return PartialView("_LoginModalContent", vm);
+        }
+
+        // GET: /Account/Login (hiển thị modal)
         [HttpGet]
         public IActionResult Login(string? returnUrl = null)
         {
             ViewBag.ReturnUrl = returnUrl;
             return PartialView("_LoginModal", new LoginViewModel());
-        }
-
-        // POST: /Account/Login
-        [HttpPost]
-        public async Task<IActionResult> Login(LoginViewModel vm, string? returnUrl = null)
-        {
-            if (!ModelState.IsValid)
-                return PartialView("_LoginModal", vm);
-
-            var client = _httpFactory.CreateClient("BookApiClient");
-            var loginDto = new LoginRequestDto
-            {
-                Email = vm.EmailOrUserName,
-                Password = vm.Password
-            };
-
-            var res = await client.PostAsJsonAsync("api/Account/login", loginDto);
-            if (!res.IsSuccessStatusCode)
-            {
-                ModelState.AddModelError("", "Đăng nhập không thành công hoặc chưa xác thực.");
-                return PartialView("_LoginModal", vm);
-            }
-
-            // Tạo Cookie Authentication
-            var claims = new List<Claim> { new Claim(ClaimTypes.Name, vm.EmailOrUserName) };
-            var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-            await HttpContext.SignInAsync(
-                CookieAuthenticationDefaults.AuthenticationScheme,
-                new ClaimsPrincipal(identity),
-                new AuthenticationProperties
-                {
-                    IsPersistent = vm.RememberMe,
-                    ExpiresUtc = DateTimeOffset.UtcNow.AddHours(1)
-                });
-
-            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
-                return Redirect(returnUrl);
-
-            return RedirectToAction("Index", "Home");
         }
 
         // GET: /Account/Logout
@@ -156,20 +153,11 @@ namespace TienThoBookStore.WebApp.Controllers
             return RedirectToAction("Index", "Home");
         }
     }
-    #region Helper DTOs
-    // Sử dụng khi đọc lỗi trả về từ API
+
+    // DTO để parse lỗi từ API
     public class ErrorResponse
     {
         public string Message { get; set; } = "";
         public bool CanResend { get; set; }
     }
-
-    // Gửi lên API /api/Account/login
-    public class LoginRequestDto
-    {
-        public string Email { get; set; } = "";
-        public string Password { get; set; } = "";
-    }
-    #endregion
-
 }

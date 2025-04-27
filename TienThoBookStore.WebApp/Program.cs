@@ -16,6 +16,7 @@ namespace TienThoBookStore.WebApp
         options.LoginPath = "/Account/Login";
         options.LogoutPath = "/Account/Logout";
         options.ExpireTimeSpan = TimeSpan.FromHours(1);
+        options.SlidingExpiration = true;
     });
             builder.Services.AddHttpClient("BookApiClient", c =>
     c.BaseAddress = new Uri(builder.Configuration["ApiBaseUrl"]));
