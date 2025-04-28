@@ -12,6 +12,7 @@ namespace TienThoBookStore.Application.Services.Interfaces
         Task<IEnumerable<BookDTO>> GetAllBooksAsync();
         Task<IEnumerable<BookDTO>> GetAllBooksAsync(int? categoryId = null);
         Task<BookDetailDTO?> GetBookByIdAsync(Guid bookId);
+        Task<IEnumerable<BookDTO>> GetAllBooksAsync(string? keyword = null);
 
 
     }

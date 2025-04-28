@@ -15,5 +15,7 @@ namespace TienThoBookStore.Application.DTOs.BookDTO
         public string CoverImage { get; set; } = default!; // URL ảnh
         public string Description { get; set; } = default!; // Mô tả sách
         public string ContentSample { get; set; } = default!; // Đọc thử
+
+        public string ContentFull { get; set; } = default!; // PDF đầy đủ
     }
 }

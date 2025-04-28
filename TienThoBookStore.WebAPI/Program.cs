@@ -9,6 +9,7 @@ using TienThoBookStore.Application.Services;
 using TienThoBookStore.Application.Mappings;
 using TienThoBookStore.Application.Services.Implementations;
 using TienThoBookStore.Application.Services.Interfaces;
+using TienThoBookStore.WebAPI.Services;
 
 
 namespace TienThoBookStore.WebAPI
@@ -19,6 +20,19 @@ namespace TienThoBookStore.WebAPI
         {
             var builder = WebApplication.CreateBuilder(args);
 
+
+            // CORS
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowWebApp", policy =>
+                {
+                    policy.WithOrigins("https://localhost:7231")
+                          .AllowAnyHeader()
+                          .AllowAnyMethod();
+                });
+            });
+
+
             // Lấy chuỗi kết nối từ appsettings.json
             var connectionString = builder.Configuration.GetConnectionString("TienThoBookStoreConnection");
 
@@ -28,6 +42,8 @@ namespace TienThoBookStore.WebAPI
             builder.Services.AddScoped<IBookService, BookService>();
             builder.Services.AddScoped<ICategoryService, CategoryService>();
             builder.Services.AddTransient<IEmailSender, SmtpEmailSender>();
+            builder.Services.AddSingleton<PdfService>();
+
 
 
 
@@ -102,10 +118,21 @@ namespace TienThoBookStore.WebAPI
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
+            
+            
 
             app.UseHttpsRedirection();
-            app.UseStaticFiles();
+            app.UseStaticFiles(new StaticFileOptions
+            {
+                OnPrepareResponse = ctx =>
+                {
+                    ctx.Context.Response.Headers.Add("Access-Control-Allow-Origin", "https://localhost:7231");
+                    ctx.Context.Response.Headers.Add("Access-Control-Allow-Methods", "GET,HEAD");
+                }
+            });
+            
             app.UseRouting();
+            app.UseCors("AllowWebApp");
             app.UseAuthorization();
 
 

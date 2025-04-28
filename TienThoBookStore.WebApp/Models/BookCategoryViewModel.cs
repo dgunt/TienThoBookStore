@@ -9,5 +9,6 @@ namespace TienThoBookStore.WebApp.Models
         public IEnumerable<CategoryDTO> Categories { get; set; } = new List<CategoryDTO>();
         public IEnumerable<BookDTO> Books { get; set; } = new List<BookDTO>();
         public int? SelectedCategoryId { get; set; }
+
     }
 }

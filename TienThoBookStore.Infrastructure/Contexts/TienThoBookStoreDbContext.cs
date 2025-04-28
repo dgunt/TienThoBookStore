@@ -64,8 +64,8 @@ namespace TienThoBookStore.Infrastructure.Contexts
         cảm và thái độ nhân ái giữa cuộc sống muôn màu.",
                     CoverImage = "cover1.jpg",
                     Price = 120000m,
-                    ContentSample = "",
-                    ContentFull = "",
+                    ContentSample = "11111111-1111-1111-1111-111111111111.pdf",
+                    ContentFull = "11111111-1111-1111-1111-111111111111.pdf",
                     PublishedDate = new DateTime(2023, 1, 1),
                     CategoryId = 1
                 },
@@ -84,8 +84,8 @@ namespace TienThoBookStore.Infrastructure.Contexts
         hội đối với những mảnh đời bất hạnh.",
                     CoverImage = "cover2.jpg",
                     Price = 150000m,
-                    ContentSample = "",
-                    ContentFull = "",
+                    ContentSample = "22222222-2222-2222-2222-222222222222.pdf",
+                    ContentFull =   "22222222-2222-2222-2222-222222222222.pdf",
                     PublishedDate = new DateTime(2023, 1, 1),
                     CategoryId = 1
                 },
@@ -103,8 +103,8 @@ namespace TienThoBookStore.Infrastructure.Contexts
         bày bi kịch gia đình và thân phận con người trước thử thách khắc nghiệt.",
                     CoverImage = "cover3.jpg",
                     Price = 130000m,
-                    ContentSample = "",
-                    ContentFull = "",
+                    ContentSample = "33333333-3333-3333-3333-333333333333.pdf",
+                    ContentFull = "33333333-3333-3333-3333-333333333333.pdf",
                     PublishedDate = new DateTime(2023, 1, 1),
                     CategoryId = 1
                 },
@@ -122,8 +122,8 @@ namespace TienThoBookStore.Infrastructure.Contexts
         Tác phẩm thôi thúc suy ngẫm về công lý, lương tri và giá trị của sinh mạng con người.",
                     CoverImage = "cover4.jpg",
                     Price = 110000m,
-                    ContentSample = "",
-                    ContentFull = "",
+                    ContentSample = "44444444-4444-4444-4444-444444444444.pdf",
+                    ContentFull = "44444444-4444-4444-4444-444444444444.pdf",
                     PublishedDate = new DateTime(2023, 1, 1),
                     CategoryId = 1
                 },
@@ -141,8 +141,8 @@ namespace TienThoBookStore.Infrastructure.Contexts
         thích tranh luận khoa học và triết học suốt nhiều thập kỷ.",
                     CoverImage = "cover5.jpg",
                     Price = 200000m,
-                    ContentSample = "",
-                    ContentFull = "",
+                    ContentSample = "55555555-5555-5555-5555-555555555555.pdf",
+                    ContentFull = "55555555-5555-5555-5555-555555555555.pdf",
                     PublishedDate = new DateTime(2023, 1, 1),
                     CategoryId = 2
                 },
@@ -160,8 +160,8 @@ namespace TienThoBookStore.Infrastructure.Contexts
         phát triển của tâm lý học nhận thức và thuyết tương đối sau này.",
                     CoverImage = "cover6.jpg",
                     Price = 180000m,
-                    ContentSample = "",
-                    ContentFull = "",
+                    ContentSample = "66666666-6666-6666-6666-666666666666.pdf",
+                    ContentFull = "66666666-6666-6666-6666-666666666666.pdf",
                     PublishedDate = new DateTime(2023, 1, 1),
                     CategoryId = 2
                 },
@@ -180,8 +180,8 @@ namespace TienThoBookStore.Infrastructure.Contexts
 
                     CoverImage = "cover7.jpg",
                     Price = 220000m,
-                    ContentSample = "",
-                    ContentFull = "",
+                    ContentSample = "77777777-7777-7777-7777-777777777777.pdf",
+                    ContentFull = "77777777-7777-7777-7777-777777777777.pdf",
                     PublishedDate = new DateTime(2023, 1, 1),
                     CategoryId = 3
                 },
@@ -199,8 +199,8 @@ namespace TienThoBookStore.Infrastructure.Contexts
         kinh tế hậu chiến, có tầm ảnh hưởng lâu dài đến chính sách quốc tế.",
                     CoverImage = "cover8.jpg",
                     Price = 210000m,
-                    ContentSample = "",
-                    ContentFull = "",
+                    ContentSample = "88888888-8888-8888-8888-888888888888.pdf",
+                    ContentFull = "88888888-8888-8888-8888-888888888888.pdf",
                     PublishedDate = new DateTime(2023, 1, 1),
                     CategoryId = 3
                 },
@@ -217,8 +217,8 @@ namespace TienThoBookStore.Infrastructure.Contexts
         tư liệu quý giá cho nghiên cứu lịch sử và văn hoá Việt Nam thời trung đại.",
                     CoverImage = "cover9.jpg",
                     Price = 90000m,
-                    ContentSample = "",
-                    ContentFull = "",
+                    ContentSample = "99999999-9999-9999-9999-999999999999.pdf",
+                    ContentFull = "99999999-9999-9999-9999-999999999999.pdf",
                     PublishedDate = new DateTime(2023, 1, 1),
                     CategoryId = 4
                 },
@@ -236,8 +236,8 @@ namespace TienThoBookStore.Infrastructure.Contexts
         cho sinh viên và người yêu sử.",
                     CoverImage = "cover10.jpg",
                     Price = 95000m,
-                    ContentSample = "",
-                    ContentFull = "",
+                    ContentSample = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa.pdf",
+                    ContentFull = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa.pdf",
                     PublishedDate = new DateTime(2023, 1, 1),
                     CategoryId = 4
                 }

@@ -1,0 +1,84 @@
+﻿@model TienThoBookStore.WebApp.Models.PreviewViewModel
+@{
+    Layout = "_Layout";
+}
+
+<div class="container-fluid py-5">
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-10 col-lg-8">
+            <h2 class="text-center mb-4">Đọc thử: @Model.Title</h2>
+
+            <div id="pdf-reader"
+                 style="height:80vh; overflow-y:auto; border:1px solid #ccc; padding:10px;">
+                <!-- PDF.js sẽ append canvas vào đây -->
+            </div>
+
+            <div class="text-center mt-3">
+                <a asp-action="Details" asp-route-id="@Model.Id"
+                   class="btn btn-secondary">Quay lại</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        /* Mọi canvas bên trong pdf-reader sẽ rộng 100% container, propor­tional height */
+        #pdf-reader canvas {
+            width: 100% !important;
+            height: auto !important;
+            display: block;
+            margin: 0 auto 1rem;
+        }
+    </style>
+}
+
+@section Scripts {
+    <!-- chỉ PDF.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc =
+          'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+
+        (async function() {
+          const url       = '@Model.SampleUrl';
+          const maxPages  = @Model.MaxPages; // =10
+          const container = document.getElementById('pdf-reader');
+
+          try {
+            const pdf    = await pdfjsLib.getDocument(url).promise;
+            const count  = Math.min(pdf.numPages, maxPages);
+            // Lấy kích bản gốc trang đầu để tính scale
+            const first  = await pdf.getPage(1);
+            const vp0    = first.getViewport({ scale: 1 });
+            const origW  = vp0.width;
+
+            // width khả dụng (padding đã có trong style)
+            const availW = container.clientWidth;
+
+            // Tính scale sao cho canvas gốc origW*scale == availW
+            const scale  = availW / origW;
+
+            for (let i = 1; i <= count; i++) {
+              const page     = await pdf.getPage(i);
+              const vp       = page.getViewport({ scale });
+              const canvas   = document.createElement('canvas');
+              canvas.width   = vp.width;
+              canvas.height  = vp.height;
+
+              // render
+              await page.render({
+                canvasContext: canvas.getContext('2d'),
+                viewport: vp
+              }).promise;
+
+              container.appendChild(canvas);
+            }
+          } catch (e) {
+            console.error(e);
+            container.innerHTML =
+              '<p class="text-danger">Không thể tải bản đọc thử, vui lòng thử lại sau.</p>';
+          }
+        })();
+    </script>
+}

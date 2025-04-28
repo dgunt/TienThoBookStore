@@ -20,7 +20,8 @@ namespace TienThoBookStore.Application.Mappings
             CreateMap<Book, BookDetailDTO>()
     .ForMember(dest => dest.CoverImage, opt => opt.MapFrom(src => src.CoverImage))
     .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.Description))
-    .ForMember(dest => dest.ContentSample, opt => opt.MapFrom(src => src.ContentSample));
+    .ForMember(dest => dest.ContentSample, opt => opt.MapFrom(src => src.ContentSample))
+    .ForMember(dest => dest.ContentFull, opt => opt.MapFrom(src => src.ContentFull));
 
         }
     }

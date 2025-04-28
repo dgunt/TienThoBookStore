@@ -18,7 +18,14 @@
             <hr />
             <!-- Buttons -->
             <div class="mt-4">
-                <a class="btn btn-secondary me-2" href="#">Đọc thử</a>
+                @if (!string.IsNullOrEmpty(Model.Book.ContentSample))
+                {
+                    <a asp-action="Preview"
+                       asp-route-id="@Model.Book.BookId"
+                       class="btn btn-secondary me-2">
+                        Đọc thử
+                    </a>
+                }
                 <a class="btn btn-outline-primary me-2" href="@Url.Action("AddToCart","Cart", new { id = Model.Book.BookId })">
                     Thêm sách vào giỏ
                 </a>

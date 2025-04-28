@@ -1,0 +1,43 @@
+﻿@model IEnumerable<TienThoBookStore.Application.DTOs.BookDTO.BookDTO>
+
+@{
+    ViewBag.Title = "Danh sách sách";
+}
+
+<div class="container py-5">
+    @* Hiển thị thông báo khi đang tìm kiếm *@
+    @if (!string.IsNullOrWhiteSpace(ViewBag.Keyword as string))
+    {
+        <div class="mb-3 text-center">
+            <p class="fs-5">Kết quả cho từ khóa: "<strong>@ViewBag.Keyword</strong>"</p>
+        </div>
+    }
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-warning text-center" role="alert">
+            Không tìm thấy sách nào.
+        </div>
+    }
+    else
+    {
+        <div class="row gx-4 gy-4">
+            @foreach (var book in Model)
+            {
+                <div class="col-6 col-md-4 col-lg-3">
+                    <div class="card h-100">
+                        <img src="@book.CoverImage" class="card-img-top" alt="@book.Title" />
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title">@book.Title</h5>
+                            <p class="card-text text-muted">@book.Author</p>
+                            <p class="card-text text-danger mb-2">@string.Format("{0:n0} đ", book.Price)</p>
+                            <a asp-action="Details"
+                               asp-route-id="@book.BookId"
+                               class="btn btn-outline-primary mt-auto">Xem chi tiết</a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

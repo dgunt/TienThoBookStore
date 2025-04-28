@@ -39,6 +39,23 @@ namespace TienThoBookStore.Application.Services.Implementations
             return _mapper.Map<IEnumerable<BookDTO>>(books);
         }
 
+        public async Task<IEnumerable<BookDTO>> GetAllBooksAsync(string? keyword = null)
+        {
+            // Sử dụng Query() để lọc
+            var query = _bookRepo.Query();
+
+            if (!string.IsNullOrWhiteSpace(keyword))
+            {
+                keyword = keyword.Trim().ToLower();
+                query = query.Where(b =>
+                    b.Title.ToLower().Contains(keyword)
+                    || b.Author.ToLower().Contains(keyword));
+            }
+
+            var books = await query.ToListAsync();
+            return _mapper.Map<IEnumerable<BookDTO>>(books);
+        }
+
         public async Task<BookDetailDTO?> GetBookByIdAsync(Guid bookId)
         {
             var book = await _bookRepo.GetByIdAsync(bookId); // giả sử repo có GetByIdAsync
