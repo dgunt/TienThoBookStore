@@ -14,6 +14,8 @@ namespace TienThoBookStore.Application.Services.Interfaces
         Task<BookDetailDTO?> GetBookByIdAsync(Guid bookId);
         Task<IEnumerable<BookDTO>> GetAllBooksAsync(string? keyword = null);
 
+        Task<BookDTO> CreateAsync(BookCreateDTO dto);
+        public Task<bool> ExistsAsync(Guid bookId);
 
     }
 }

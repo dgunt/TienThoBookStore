@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using TienThoBookStore.Application.Services.Interfaces;
@@ -174,9 +175,64 @@ namespace TienThoBookStore.WebAPI.Controllers
                 model.Email, model.Password, isPersistent: false, lockoutOnFailure: false);
 
             if (result.Succeeded)
-                return Ok(new { Message = "Đăng nhập thành công!" });
-
+            {
+                var roles = await _userManager.GetRolesAsync(user);
+                return Ok(new { Message = "Đăng nhập thành công!", Roles = roles });
+            }    
             return Unauthorized(new { Message = "Sai thông tin đăng nhập!" });
+        }
+        // GET: api/Account/pending-users
+        [HttpGet("pending-users")]
+        public IActionResult GetPendingUsers()
+        {
+            var adminEmail = "vuducminhvn2003@gmail.com";
+            var list = _userManager.Users
+            // nếu muốn hiển thị TẤT CẢ user, bỏ .Where
+            //.Where(u => !u.Verified)
+            .Where(u=>u.Email != adminEmail)
+            .Select(u => new {
+                u.Id,
+                u.Email,
+                u.Name,       // thêm dòng này
+                u.Verified
+            })
+            .ToList();
+            return Ok(list);
+        }
+
+        // POST: api/Account/approve-user/{id}
+        [HttpPost("approve-user/{id}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> ApproveUser(string id)
+        {
+            var u = await _userManager.FindByIdAsync(id);
+            if (u == null) return NotFound();
+            u.Verified = true;
+            u.EmailConfirmed = true;
+            await _userManager.UpdateAsync(u);
+            return Ok(new { Message = "Đã phê duyệt user." });
+        }
+        [HttpPost("deactivate-user/{id}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> DeactivateUser(string id)
+        {
+            var u = await _userManager.FindByIdAsync(id);
+            if (u == null) return NotFound();
+            u.Verified = false;
+            // (nếu muốn, có thể user.EmailConfirmed = false;)
+            await _userManager.UpdateAsync(u);
+            return Ok(new { Message = "Đã hủy kích hoạt user." });
+        }
+        [HttpDelete("delete-user/{id}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> DeleteUser(string id)
+        {
+            var u = await _userManager.FindByIdAsync(id);
+            if (u == null) return NotFound();
+            var result = await _userManager.DeleteAsync(u);
+            if (!result.Succeeded)
+                return BadRequest(new { Message = "Xóa user thất bại." });
+            return NoContent();
         }
 
     }

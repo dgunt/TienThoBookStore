@@ -10,5 +10,9 @@ namespace TienThoBookStore.Application.Services.Interfaces
     public interface ICategoryService
     {
         Task<IEnumerable<CategoryDTO>> GetAllCategoriesAsync();
+        Task<CategoryDTO?> GetByIdAsync(int id);
+        Task<CategoryDTO> CreateAsync(CategoryDTO dto);
+        Task<bool> UpdateAsync(int id, CategoryDTO dto);
+        Task DeleteAsync(int id);
     }
 }

@@ -1,0 +1,16 @@
+﻿@model TienThoBookStore.WebApp.Models.BookDto
+@{
+    ViewData["Title"] = "Xác nhận xóa Sách";
+}
+<h1 class="h3 mb-4 text-gray-800">Xác nhận xóa sách</h1>
+<dl class="row">
+    <dt class="col-sm-3">Tiêu đề</dt>
+    <dd class="col-sm-9">@Model.Title</dd>
+    <dt class="col-sm-3">Tác giả</dt>
+    <dd class="col-sm-9">@Model.Author</dd>
+</dl>
+<form asp-action="DeleteBook" method="post">
+    <input type="hidden" name="id" value="@Model.BookId" />
+    <button type="submit" class="btn btn-danger">Xác nhận xóa</button>
+    <a asp-action="Books" class="btn btn-secondary">Hủy</a>
+</form>

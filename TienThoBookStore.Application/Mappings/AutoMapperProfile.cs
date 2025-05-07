@@ -15,7 +15,16 @@ namespace TienThoBookStore.Application.Mappings
         public AutoMapperProfile()
         {
             // Map Book → BookDTO
-            CreateMap<Book, BookDTO>();
+            CreateMap<Book, BookDTO>()
+                  .ForMember(d => d.BookId, o => o.MapFrom(s => s.BookId))
+            .ForMember(d => d.Description, o => o.MapFrom(s => s.Description))
+            .ForMember(d => d.PublishedDate, o => o.MapFrom(s => s.PublishedDate))
+            .ForMember(d => d.CategoryId, o => o.MapFrom(s => s.CategoryId))
+            // map Category.Name (cần include Category trong EF query nếu dùng lazy-loading).
+            .ForMember(d => d.CategoryName, o => o.MapFrom(s => s.Category.Name))
+            .ForMember(d => d.CoverImage, o => o.MapFrom(s => s.CoverImage))
+            .ForMember(d => d.ContentFull, o => o.MapFrom(s => s.ContentFull))
+            .ForMember(d => d.ContentSample, o => o.MapFrom(s => s.ContentSample)); 
             CreateMap<Category, CategoryDTO>();
             CreateMap<Book, BookDetailDTO>()
     .ForMember(dest => dest.CoverImage, opt => opt.MapFrom(src => src.CoverImage))

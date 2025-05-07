@@ -1,0 +1,82 @@
+﻿@model TienThoBookStore.WebApp.Models.BookCreateVm
+@{
+    ViewData["Title"] = "Chỉnh sửa Sách";
+}
+
+<h1 class="h3 mb-4 text-gray-800">Chỉnh sửa Sách</h1>
+
+<form asp-action="EditBook" method="post" enctype="multipart/form-data">
+    <input type="hidden" asp-for="Id" />
+
+    <div class="form-group">
+        <label asp-for="Title">Tiêu đề</label>
+        <input asp-for="Title" class="form-control" />
+        <span asp-validation-for="Title" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Author">Tác giả</label>
+        <input asp-for="Author" class="form-control" />
+        <span asp-validation-for="Author" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Description">Mô tả</label>
+        <textarea asp-for="Description" class="form-control" rows="4"></textarea>
+        <span asp-validation-for="Description" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Price">Giá (VNĐ)</label>
+        <input asp-for="Price" class="form-control" />
+        <span asp-validation-for="Price" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="PublishedDate">Ngày phát hành</label>
+        <input asp-for="PublishedDate" type="date" class="form-control" />
+        <span asp-validation-for="PublishedDate" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="CategoryId">Danh mục</label>
+        <select asp-for="CategoryId" class="form-control"
+                asp-items='@(new SelectList(ViewBag.Categories, "CategoryId", "Name"))'>
+            <option value="">-- Chọn danh mục --</option>
+        </select>
+        <span asp-validation-for="CategoryId" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label>Ảnh bìa hiện tại</label><br />
+        @if (!string.IsNullOrEmpty(Model.CoverImageFileName))
+        {
+            <img src="~/@Model.CoverImageFileName" width="120" class="img-thumbnail mb-2" />
+        }
+        <br />
+        <label>Thay ảnh bìa</label>
+        <input asp-for="CoverImageFile" type="file" class="form-control-file" />
+        <span asp-validation-for="CoverImageFile" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label>File PDF hiện tại</label><br />
+        @if (!string.IsNullOrEmpty(Model.ContentFileName))
+        {
+            <a href="~/@Model.ContentFileName" target="_blank">Tải file hiện tại</a>
+        }
+        <br />
+        <label>Thay file PDF</label>
+        <input asp-for="ContentFile" type="file" class="form-control-file" />
+        <span asp-validation-for="ContentFile" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Cập nhật</button>
+    <a asp-action="Books" class="btn btn-secondary">Hủy</a>
+</form>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

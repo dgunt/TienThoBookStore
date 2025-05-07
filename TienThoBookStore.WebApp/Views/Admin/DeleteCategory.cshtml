@@ -1,0 +1,20 @@
+﻿@model TienThoBookStore.WebApp.Models.CategoryDto
+@{
+    ViewData["Title"] = "Xác nhận xóa Danh mục";
+}
+<h1 class="h3 mb-4 text-gray-800">Xác nhận xóa danh mục</h1>
+<dl class="row">
+    <dt class="col-sm-3">ID</dt>
+    <dd class="col-sm-9">@Model.CategoryId</dd>
+    <dt class="col-sm-3">Tên</dt>
+    <dd class="col-sm-9">@Model.Name</dd>
+</dl>
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+<form asp-action="DeleteCategory" method="post">
+    <input type="hidden" name="id" value="@Model.CategoryId" />
+    <button type="submit" class="btn btn-danger">Xác nhận xóa</button>
+    <a asp-action="Categories" class="btn btn-secondary">Hủy</a>
+</form>

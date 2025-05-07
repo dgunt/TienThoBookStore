@@ -1,0 +1,52 @@
+﻿@model List<TienThoBookStore.WebApp.Models.UserDto>
+@{
+    ViewData["Title"] = "Quản lý Người dùng";
+}
+<h1 class="h3 mb-4 text-gray-800">Quản lý Người dùng</h1>
+<table class="table table-bordered table-hover">
+    <thead class="thead-light">
+        <tr><th>Email</th><th>Họ và tên</th><th>Đã kích hoạt?</th><th>Thao tác</th></tr>
+    </thead>
+    <tbody>
+        @foreach (var u in Model)
+        {
+            <tr>
+                <td>@u.Email</td>
+                <td>@u.Name</td>
+                <td>
+                    @if (u.Verified)
+                    {
+                        <span class="badge badge-success">Kích hoạt</span>
+                    }
+                    else
+                    {
+                        <span class="badge badge-warning">Chưa</span>
+                    }
+                </td>
+                <td>
+                    @if (!u.Verified)
+                    {
+                        <form asp-action="ApproveUser" asp-route-id="@u.Id" method="post" class="d-inline"
+                              onsubmit="return confirm('Kích hoạt tài khoản này?');">
+                            <button type="submit" class="btn btn-sm btn-success">Kích hoạt</button>
+                        </form>
+                    }
+                    else
+                    {
+                        <form asp-action="DeactivateUser" asp-route-id="@u.Id"
+                              method="post" class="d-inline"
+                              onsubmit="return confirm('Bạn có chắc hủy kích hoạt?');">
+                            <button class="btn btn-sm btn-warning">Hủy kích hoạt</button>
+                        </form>
+                    }
+
+                    <form asp-action="DeleteUser" asp-route-id="@u.Id"
+                          method="post" class="d-inline"
+                          onsubmit="return confirm('Xóa tài khoản này?');">
+                        <button class="btn btn-sm btn-danger">Xóa</button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

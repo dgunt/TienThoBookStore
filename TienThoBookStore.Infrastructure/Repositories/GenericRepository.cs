@@ -42,10 +42,15 @@ namespace TienThoBookStore.Infrastructure.Repositories
             return await _context.Set<T>().ToListAsync();
         }
 
-        public async Task<T> GetByIdAsync(Guid id)
+        //public async Task<T> GetByIdAsync(Guid id)
+        //{
+        //    //throw new NotImplementedException();
+        //    return await _context.Set<T>().FindAsync(id);
+        //}
+
+        public async Task<T?> GetByIdAsync(params object[] keyValues)
         {
-            //throw new NotImplementedException();
-            return await _context.Set<T>().FindAsync(id);
+            return await _context.Set<T>().FindAsync(keyValues);
         }
 
         public IQueryable<T> Query()  // <-- hiện thực method mới

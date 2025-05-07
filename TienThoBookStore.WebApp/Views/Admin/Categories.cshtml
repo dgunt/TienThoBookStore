@@ -1,0 +1,23 @@
+﻿@model List<TienThoBookStore.WebApp.Models.CategoryDto>
+@{
+    ViewData["Title"] = "Quản lý Danh mục";
+}
+<h1 class="h3 mb-4 text-gray-800">Quản lý Danh mục sách</h1>
+<a asp-action="CreateCategory" class="btn btn-success mb-3">+ Thêm danh mục</a>
+<table class="table table-bordered">
+    <thead class="thead-light">
+        <tr><th>Tên danh mục</th><th>Thao tác</th></tr>
+    </thead>
+    <tbody>
+        @foreach (var c in Model)
+        {
+            <tr>
+                <td>@c.Name</td>
+                <td>
+                    <a asp-action="EditCategory" asp-route-id="@c.CategoryId" class="btn btn-sm btn-info">Sửa</a>
+                    <a asp-action="DeleteCategory" asp-route-id="@c.CategoryId" class="btn btn-sm btn-danger">Xóa</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

@@ -127,52 +127,85 @@ namespace TienThoBookStore.WebApp.Controllers
             // 1) Kiểm ModelState
             if (!ModelState.IsValid)
             {
+                // Trả lại partial view để render form với error
                 return PartialView("_LoginModalContent", vm);
             }
 
             // 2) Gọi API login
             var client = _httpFactory.CreateClient("BookApiClient");
-            var res = await client.PostAsJsonAsync("api/Account/login", new
+            var payload = new
             {
                 Email = vm.EmailOrUserName,
                 Password = vm.Password
-            });
+            };
+            var res = await client.PostAsJsonAsync("api/Account/login", payload);
 
-            // nếu 2xx, coi là Success
-            if (res.IsSuccessStatusCode)
+            // 3) Xử lý khi login thất bại
+            if (!res.IsSuccessStatusCode)
             {
-                // tạo cookie
-                var claims = new List<Claim> { new Claim(ClaimTypes.Name, vm.EmailOrUserName) };
-                var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-                await HttpContext.SignInAsync(
-                    CookieAuthenticationDefaults.AuthenticationScheme,
-                    new ClaimsPrincipal(identity),
-                    new AuthenticationProperties { IsPersistent = vm.RememberMe }
-                );
-                // trả JSON success
-                return Json(new { Success = true });
-            }
+                var err = await res.Content.ReadFromJsonAsync<ErrorResponse>()
+                          ?? new ErrorResponse { Message = "Đăng nhập thất bại." };
 
-            // đọc JSON lỗi
-            var err = await res.Content.ReadFromJsonAsync<ErrorResponse>()
-                      ?? new ErrorResponse { Message = "Đăng nhập thất bại." };
+                // Nếu API trả về có thể resend email (ví dụ link hết hạn)
+                if (err.CanResend)
+                {
+                    return Json(new
+                    {
+                        Success = false,
+                        Message = err.Message,
+                        CanResend = true
+                    });
+                }
 
-            // nếu API báo canResend, ta trả JSON để JS biết phải show modal resend
-            if (err.CanResend)
                 return Json(new
                 {
                     Success = false,
-                    Message = err.Message,
-                    CanResend = true
+                    Message = err.Message
                 });
+            }
 
+            // 4) Đọc LoginResponse (chứa Token, Roles, v.v.)
+            var data = await res.Content.ReadFromJsonAsync<LoginResponse>();
+
+            // 5) Tạo claims: bắt buộc có Name, thêm các Role nếu có
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Name, vm.EmailOrUserName)
+            };
+            if (data?.Roles != null)
+            {
+                claims.AddRange(data.Roles.Select(r =>
+                    new Claim(ClaimTypes.Role, r)));
+            }
+
+            // 6) Đăng nhập bằng cookie
+            var identity = new ClaimsIdentity(
+                claims,
+                CookieAuthenticationDefaults.AuthenticationScheme);
+            var principal = new ClaimsPrincipal(identity);
+            var authProps = new AuthenticationProperties
+            {
+                IsPersistent = vm.RememberMe
+            };
+            await HttpContext.SignInAsync(
+                CookieAuthenticationDefaults.AuthenticationScheme,
+                principal,
+                authProps);
+
+            // 7) Xác định redirect dựa trên role
+            var isAdmin = data?.Roles?.Contains("Admin") == true;
+            var redirectUrl = isAdmin
+                ? Url.Action("Users", "Admin")
+                : Url.Action("Index", "Home");
+
+            // 8) Trả về JSON success kèm URL
             return Json(new
             {
-                Success = false,
-                Message = err.Message
+                Success = true,
+                RedirectUrl = redirectUrl
             });
-
         }
+
 
         // GET: /Account/Login (hiển thị modal)
         [HttpGet]
@@ -190,7 +223,7 @@ namespace TienThoBookStore.WebApp.Controllers
             return RedirectToAction("Index", "Home");
         }
     }
-
+    public class LoginResponse { public string Message { get; set; } = ""; public List<string>? Roles { get; set; } }
     // DTO để parse lỗi từ API
     public class ErrorResponse
     {

@@ -9,7 +9,7 @@ namespace TienThoBookStore.Infrastructure.Repositories
 {
     public interface IGenericRepository<T> where T : class
     {
-        Task<T> GetByIdAsync(Guid id);
+        Task<T?> GetByIdAsync(params object[] keyValues);
         Task<IEnumerable<T>> GetAllAsync();
         IQueryable<T> Query();
         Task AddAsync(T entity);

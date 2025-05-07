@@ -1,0 +1,19 @@
+﻿@model TienThoBookStore.WebApp.Models.CategoryVm
+@{
+    ViewData["Title"] = "Thêm Danh mục";
+}
+<h1 class="h3 mb-4 text-gray-800">Thêm Danh mục mới</h1>
+<form asp-action="CreateCategory" method="post">
+    <div class="form-group">
+        <label asp-for="Name">Tên danh mục</label>
+        <input asp-for="Name" class="form-control" />
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+    <button type="submit" class="btn btn-primary">Lưu</button>
+    <a asp-action="Categories" class="btn btn-secondary">Hủy</a>
+</form>
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
