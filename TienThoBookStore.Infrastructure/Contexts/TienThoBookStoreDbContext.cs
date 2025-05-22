@@ -31,6 +31,8 @@ namespace TienThoBookStore.Infrastructure.Contexts
         public DbSet<CartItem> CartItems { get; set; }
         public DbSet<Transaction> Transactions { get; set; }
         public DbSet<TransactionDetail> TransactionDetails { get; set; }
+        public DbSet<Order> Orders { get; set; }
+        public DbSet<OrderItem> OrderItems { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -39,6 +41,22 @@ namespace TienThoBookStore.Infrastructure.Contexts
 
             // Áp dụng tự động các Configuration đã tạo trong Assembly Configurations
             builder.ApplyConfigurationsFromAssembly(typeof(CategoryConfiguration).Assembly);
+            builder.Entity<Order>()
+                 .HasMany(o => o.Items)
+                .WithOne(i => i.Order)
+                .HasForeignKey(i => i.OrderId);
+
+            builder.Entity<OrderItem>(entity =>
+            {
+                // Quan hệ 1-n: mỗi OrderItem “thuộc” một Book
+                entity.HasOne(i => i.Book)
+                      .WithMany()                      
+                      .HasForeignKey(i => i.BookId);
+
+                //Thêm index duy nhất: mỗi Book chỉ xuất hiện 1 lần trong cùng Order
+                entity.HasIndex(i => new { i.OrderId, i.BookId })
+                      .IsUnique();
+            });
 
             // --- SEED CATEGORY ---
             builder.Entity<Category>().HasData(

@@ -11,7 +11,8 @@
               asp-action="Register"
               method="post"
               novalidate>
-            <div data-valmsg-summary="true" class="text-danger mb-3"></div>
+            @Html.AntiForgeryToken()
+            <div data-valmsg-summary="All" class="text-danger mb-3"></div>
 
             <div class="mb-3">
                 <label asp-for="Email"></label>

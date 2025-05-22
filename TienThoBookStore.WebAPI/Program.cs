@@ -9,7 +9,8 @@ using TienThoBookStore.Application.Services;
 using TienThoBookStore.Application.Mappings;
 using TienThoBookStore.Application.Services.Implementations;
 using TienThoBookStore.Application.Services.Interfaces;
-using TienThoBookStore.WebAPI.Services;
+using TienThoBookStore.Infrastructure;
+using TienThoBookStore.Application;
 
 
 namespace TienThoBookStore.WebAPI
@@ -33,42 +34,9 @@ namespace TienThoBookStore.WebAPI
             });
 
 
-            // Lấy chuỗi kết nối từ appsettings.json
-            var connectionString = builder.Configuration.GetConnectionString("TienThoBookStoreConnection");
-
-            builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
-            builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-
-            builder.Services.AddScoped<IBookService, BookService>();
-            builder.Services.AddScoped<ICategoryService, CategoryService>();
-            builder.Services.AddTransient<IEmailSender, SmtpEmailSender>();
-            builder.Services.AddSingleton<PdfService>();
+            builder.Services.AddInfrastructure(builder.Configuration).AddApplication();
 
 
-
-
-
-            // Đăng ký DbContext với SQL Server
-            builder.Services.AddDbContext<TienThoBookStoreDbContext>(options =>
-                options.UseSqlServer(connectionString));
-
-
-            //Đăng ký AutoMapper
-            builder.Services.AddAutoMapper(typeof(AutoMapperProfile).Assembly);
-
-
-            // Cấu hình ASP.NET Core Identity
-            builder.Services.AddIdentity<AppUser, IdentityRole<Guid>>(options =>
-            {
-                options.Password.RequireNonAlphanumeric = false;
-                options.Password.RequireDigit = true;
-                options.Password.RequireLowercase = true;
-                options.Password.RequireUppercase = false;
-                options.Password.RequiredLength = 6;
-            })
-            .AddEntityFrameworkStores<TienThoBookStoreDbContext>()
-            .AddDefaultTokenProviders();
-            
             builder.Services.Configure<DataProtectionTokenProviderOptions>(opt =>
             opt.TokenLifespan = TimeSpan.FromMinutes(5)  // token sống 5 phút
 );

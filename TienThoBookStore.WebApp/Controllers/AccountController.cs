@@ -1,8 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Net.Http.Json;
 using System.Security.Claims;
+using TienThoBookStore.Domain.Entities;
 using TienThoBookStore.WebApp.Models;
 
 namespace TienThoBookStore.WebApp.Controllers
@@ -10,8 +12,15 @@ namespace TienThoBookStore.WebApp.Controllers
     public class AccountController : Controller
     {
         private readonly IHttpClientFactory _httpFactory;
-        public AccountController(IHttpClientFactory httpFactory)
-            => _httpFactory = httpFactory;
+        private readonly UserManager<AppUser> _userManager;
+
+        public AccountController(
+            IHttpClientFactory httpFactory,
+            UserManager<AppUser> userManager)
+        {
+            _httpFactory = httpFactory;
+            _userManager = userManager;
+        }
 
         // POST: /Account/Register
         [HttpPost]
@@ -55,7 +64,11 @@ namespace TienThoBookStore.WebApp.Controllers
             }
 
             // 4) Thành công → trả JSON 200
-            return Json(new { Success = true });
+              return Json(new
+            {
+                Success = true,
+                Message = "Đăng ký thành công! Vui lòng kiểm tra email để xác thực.",
+                RedirectUrl = Url.Action("RegisterConfirmation", "Account")});
         }
 
         // GET: /Account/RegisterConfirmation
@@ -168,10 +181,15 @@ namespace TienThoBookStore.WebApp.Controllers
             var data = await res.Content.ReadFromJsonAsync<LoginResponse>();
 
             // 5) Tạo claims: bắt buộc có Name, thêm các Role nếu có
+            var appUser = await _userManager.FindByEmailAsync(vm.EmailOrUserName);
+            if (appUser is null)
+                return Json(new { Success = false, Message = "User không tồn tại." });
+
             var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.Name, vm.EmailOrUserName)
-            };
+        {
+            new Claim(ClaimTypes.NameIdentifier, appUser.Id.ToString()),
+            new Claim(ClaimTypes.Name, vm.EmailOrUserName)
+        };
             if (data?.Roles != null)
             {
                 claims.AddRange(data.Roles.Select(r =>
@@ -181,14 +199,14 @@ namespace TienThoBookStore.WebApp.Controllers
             // 6) Đăng nhập bằng cookie
             var identity = new ClaimsIdentity(
                 claims,
-                CookieAuthenticationDefaults.AuthenticationScheme);
+                IdentityConstants.ApplicationScheme);
             var principal = new ClaimsPrincipal(identity);
             var authProps = new AuthenticationProperties
             {
                 IsPersistent = vm.RememberMe
             };
             await HttpContext.SignInAsync(
-                CookieAuthenticationDefaults.AuthenticationScheme,
+                IdentityConstants.ApplicationScheme,
                 principal,
                 authProps);
 
@@ -219,7 +237,7 @@ namespace TienThoBookStore.WebApp.Controllers
         [HttpGet]
         public async Task<IActionResult> Logout()
         {
-            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            await HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme);
             return RedirectToAction("Index", "Home");
         }
     }

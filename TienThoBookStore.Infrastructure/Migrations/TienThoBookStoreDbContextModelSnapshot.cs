@@ -677,6 +677,61 @@ namespace TienThoBookStore.Infrastructure.Migrations
                     b.ToTable("Note", (string)null);
                 });
 
+            modelBuilder.Entity("TienThoBookStore.Domain.Entities.Order", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("PaidDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("TotalAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Orders");
+                });
+
+            modelBuilder.Entity("TienThoBookStore.Domain.Entities.OrderItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<Guid>("BookId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("OrderId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("Price")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BookId");
+
+                    b.HasIndex("OrderId", "BookId")
+                        .IsUnique();
+
+                    b.ToTable("OrderItems");
+                });
+
             modelBuilder.Entity("TienThoBookStore.Domain.Entities.ReadingProgress", b =>
                 {
                     b.Property<Guid>("UserId")
@@ -981,6 +1036,25 @@ namespace TienThoBookStore.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("TienThoBookStore.Domain.Entities.OrderItem", b =>
+                {
+                    b.HasOne("TienThoBookStore.Domain.Entities.Book", "Book")
+                        .WithMany()
+                        .HasForeignKey("BookId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("TienThoBookStore.Domain.Entities.Order", "Order")
+                        .WithMany("Items")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Book");
+
+                    b.Navigation("Order");
+                });
+
             modelBuilder.Entity("TienThoBookStore.Domain.Entities.ReadingProgress", b =>
                 {
                     b.HasOne("TienThoBookStore.Domain.Entities.AppUser", null)
@@ -1103,6 +1177,11 @@ namespace TienThoBookStore.Infrastructure.Migrations
             modelBuilder.Entity("TienThoBookStore.Domain.Entities.Category", b =>
                 {
                     b.Navigation("Books");
+                });
+
+            modelBuilder.Entity("TienThoBookStore.Domain.Entities.Order", b =>
+                {
+                    b.Navigation("Items");
                 });
 
             modelBuilder.Entity("TienThoBookStore.Domain.Entities.Transaction", b =>

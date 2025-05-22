@@ -1,84 +1,118 @@
-﻿@model TienThoBookStore.WebApp.Models.PreviewViewModel
+﻿
+@model TienThoBookStore.WebApp.Models.PreviewViewModel
 @{
     Layout = "_Layout";
 }
 
-<div class="container-fluid py-5">
-    <div class="row justify-content-center">
-        <div class="col-12 col-md-10 col-lg-8">
-            <h2 class="text-center mb-4">Đọc thử: @Model.Title</h2>
+<div class="container-fluid py-2">
+    <h2 class="text-center mb-3">Đọc thử: @Model.Title</h2>
 
-            <div id="pdf-reader"
-                 style="height:80vh; overflow-y:auto; border:1px solid #ccc; padding:10px;">
-                <!-- PDF.js sẽ append canvas vào đây -->
-            </div>
+    <!-- Toolbar -->
+    <div id="pdf-toolbar" class="d-flex justify-content-center align-items-center mb-2">
+        <button id="prev-page" class="btn btn-outline-primary mx-1">‹</button>
+        <span>Trang <span id="page-num">1</span> / <span id="page-count">0</span></span>
+        <button id="next-page" class="btn btn-outline-primary mx-1">›</button>
+        <button id="zoom-out" class="btn btn-outline-secondary mx-1">–</button>
+        <button id="zoom-in" class="btn btn-outline-secondary mx-1">＋</button>
+    </div>
 
-            <div class="text-center mt-3">
-                <a asp-action="Details" asp-route-id="@Model.Id"
-                   class="btn btn-secondary">Quay lại</a>
-            </div>
-        </div>
+    <!-- PDF Container -->
+    <div id="pdf-reader"
+         style="width:100%; height:90vh; overflow:auto; border:1px solid #ccc;">
+        <!-- PDF.js sẽ append canvas vào đây -->
+    </div>
+
+    <div class="text-center mt-3">
+        <a asp-action="Details" asp-route-id="@Model.Id"
+           class="btn btn-secondary">Quay lại</a>
     </div>
 </div>
 
 @section Styles {
     <style>
-        /* Mọi canvas bên trong pdf-reader sẽ rộng 100% container, propor­tional height */
+        /* Khung canvas luôn to hết container */
         #pdf-reader canvas {
-            width: 100% !important;
-            height: auto !important;
             display: block;
-            margin: 0 auto 1rem;
+            margin: 0 auto;
         }
     </style>
 }
 
 @section Scripts {
-    <!-- chỉ PDF.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <script>
         pdfjsLib.GlobalWorkerOptions.workerSrc =
           'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
         (async function() {
-          const url       = '@Model.SampleUrl';
-          const maxPages  = @Model.MaxPages; // =10
-          const container = document.getElementById('pdf-reader');
+            const url       = '@Model.SampleUrl';
+            const maxPages  = @Model.MaxPages; // số trang tối đa cho phép
+            const container = document.getElementById('pdf-reader');
+            const pageNumSpan   = document.getElementById('page-num');
+            const pageCountSpan = document.getElementById('page-count');
+            const btnPrev   = document.getElementById('prev-page');
+            const btnNext   = document.getElementById('next-page');
+            const btnZoomIn = document.getElementById('zoom-in');
+            const btnZoomOut= document.getElementById('zoom-out');
 
-          try {
-            const pdf    = await pdfjsLib.getDocument(url).promise;
-            const count  = Math.min(pdf.numPages, maxPages);
-            // Lấy kích bản gốc trang đầu để tính scale
-            const first  = await pdf.getPage(1);
-            const vp0    = first.getViewport({ scale: 1 });
-            const origW  = vp0.width;
+            let pdfDoc     = null;
+            let pageNum    = 1;
+            let scale      = 1.0;
+            const scaleStep = 0.25;  // mức zoom mỗi lần click
 
-            // width khả dụng (padding đã có trong style)
-            const availW = container.clientWidth;
+            // Tạo 1 canvas duy nhất
+            const canvas = document.createElement('canvas');
+            const ctx    = canvas.getContext('2d');
+            container.appendChild(canvas);
 
-            // Tính scale sao cho canvas gốc origW*scale == availW
-            const scale  = availW / origW;
-
-            for (let i = 1; i <= count; i++) {
-              const page     = await pdf.getPage(i);
-              const vp       = page.getViewport({ scale });
-              const canvas   = document.createElement('canvas');
-              canvas.width   = vp.width;
-              canvas.height  = vp.height;
-
-              // render
-              await page.render({
-                canvasContext: canvas.getContext('2d'),
-                viewport: vp
-              }).promise;
-
-              container.appendChild(canvas);
+            function renderPage(num) {
+                pdfDoc.getPage(num).then(page => {
+                    const vp = page.getViewport({ scale: scale });
+                    canvas.width  = vp.width;
+                    canvas.height = vp.height;
+                    return page.render({ canvasContext: ctx, viewport: vp }).promise;
+                }).then(() => {
+                    pageNumSpan.textContent   = pageNum;
+                });
             }
-          } catch (e) {
-            console.error(e);
-            container.innerHTML =
-              '<p class="text-danger">Không thể tải bản đọc thử, vui lòng thử lại sau.</p>';
-          }
+
+            try {
+                pdfDoc = await pdfjsLib.getDocument(url).promise;
+                const total = Math.min(pdfDoc.numPages, maxPages);
+                pageCountSpan.textContent = total;
+
+                // khởi render trang đầu
+                renderPage(pageNum);
+
+                // Nút prev/next
+                btnPrev.addEventListener('click', () => {
+                    if (pageNum <= 1) return;
+                    pageNum--;
+                    renderPage(pageNum);
+                });
+                btnNext.addEventListener('click', () => {
+                    if (pageNum >= total) return;
+                    pageNum++;
+                    renderPage(pageNum);
+                });
+
+                // Nút zoom
+                btnZoomIn.addEventListener('click', () => {
+                    scale += scaleStep;
+                    renderPage(pageNum);
+                });
+                btnZoomOut.addEventListener('click', () => {
+                    if (scale <= scaleStep) return;
+                    scale -= scaleStep;
+                    renderPage(pageNum);
+                });
+
+            } catch (err) {
+                console.error(err);
+                container.innerHTML =
+                  '<p class="text-danger text-center">Không thể tải bản đọc thử, vui lòng thử lại sau.</p>';
+            }
         })();
     </script>
 }
+

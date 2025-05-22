@@ -4,7 +4,7 @@ using TienThoBookStore.Application.DTOs.BookDTO;
 using TienThoBookStore.Application.Services.Interfaces;
 using TienThoBookStore.Domain.Entities;
 using TienThoBookStore.Infrastructure.UnitOfWork;
-using TienThoBookStore.WebAPI.Services;
+
 using TienThoBookStore.WebAPI.Models;
 using System.Net;
 using PdfSharpCore.Pdf.IO;
@@ -19,10 +19,10 @@ namespace TienThoBookStore.WebAPI.Controllers
         private readonly IUnitOfWork _uow;
         private readonly ILogger<BookController> _logger;
         private readonly IWebHostEnvironment _env;   
-        private readonly PdfService _pdfService;
+        private readonly Application.Services.Implementations.PdfService _pdfService;
         public BookController(IBookService bookService, IUnitOfWork uow
             , ILogger<BookController> logger,
-            IWebHostEnvironment env,PdfService pdfService)
+            IWebHostEnvironment env,Application.Services.Implementations.PdfService pdfService)
         {
             _bookService = bookService;
             _uow = uow;

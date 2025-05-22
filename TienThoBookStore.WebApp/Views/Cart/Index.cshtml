@@ -1,0 +1,28 @@
+﻿@using System.Linq
+@model TienThoBookStore.Domain.Entities.Order
+
+<h2>Giỏ hàng của bạn</h2>
+
+@if (Model == null || !Model.Items.Any())
+{
+    <p>Giỏ hàng trống.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr><th>Sách</th><th>Giá</th></tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.Items)
+            {
+                <tr>
+                    <td>@item.Book.Title</td>
+                    <td>@String.Format("{0:0,0} ₫", item.Price)</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <p><strong>Tổng cộng: </strong>@String.Format("{0:0,0} ₫", Model.TotalAmount)</p>
+    <a asp-action="Checkout" class="btn btn-success">Thanh toán</a>
+}

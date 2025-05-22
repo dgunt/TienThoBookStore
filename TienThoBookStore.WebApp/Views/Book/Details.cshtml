@@ -26,13 +26,125 @@
                         Đọc thử
                     </a>
                 }
-                <a class="btn btn-outline-primary me-2" href="@Url.Action("AddToCart","Cart", new { id = Model.Book.BookId })">
+                @* <a class="btn btn-outline-primary me-2" href="@Url.Action("AddToCart","Cart", new { id = Model.Book.BookId })"> *@
+                @*     Thêm sách vào giỏ *@
+                @* </a> *@
+                <button id="btnAddToCart"
+                        class="btn btn-outline-primary me-2"
+                        data-book-id="@Model.Book.BookId"
+                        type="button">
                     Thêm sách vào giỏ
-                </a>
-                <a class="btn btn-primary" href="@Url.Action("Checkout","Cart")">
+                </button>
+
+                <button id="btnBuyNow"
+                        class="btn btn-primary"
+                        data-book-id="@Model.Book.BookId"
+                        type="button">
                     Mua sách
-                </a>
+                </button>
+
             </div>
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+          // ————————————————
+          // 1) Thêm sách vào giỏ (AddToCart)
+          // ————————————————
+          const btnAdd = document.getElementById("btnAddToCart");
+          if (btnAdd) {
+            btnAdd.addEventListener("click", async () => {
+              const bookId = btnAdd.dataset.bookId;
+              try {
+                const res = await fetch(
+                  `/Cart/AddToCart?bookId=${encodeURIComponent(bookId)}`,
+                  {
+                    method: "POST",
+                    credentials: "same-origin",       // gửi cookie auth
+                    headers: {
+                      "X-Requested-With": "XMLHttpRequest"
+                    }
+                  }
+                );
+
+                if (res.status === 401) {
+                  // chưa login → show login modal
+                  const loginModalEl = document.getElementById("loginModal");
+                  if (loginModalEl) {
+                    new bootstrap.Modal(loginModalEl).show();
+                  }
+                  return;
+                }
+                if (!res.ok) {
+                  // lỗi 404/500…
+                  const err = await res.json().catch(() => null);
+                  alert(err?.message || "Thêm sách vào giỏ thất bại");
+                  return;
+                }
+
+                // thành công ⇒ đọc JSON { success, count }
+                const data = await res.json();
+                // cập nhật badge
+                const badge = document.getElementById("cart-count");
+                if (badge) badge.textContent = data.count;
+              }
+              catch (ex) {
+                console.error(ex);
+                alert("Có lỗi xảy ra, vui lòng thử lại");
+              }
+            });
+          }
+
+          // ————————————————
+          // 2) Mua sách ngay (BuyNow)
+          // ————————————————
+          const btnBuy = document.getElementById("btnBuyNow");
+          if (btnBuy) {
+            btnBuy.addEventListener("click", async () => {
+              const bookId = btnBuy.dataset.bookId;
+              try {
+                const res = await fetch(
+                  `/Cart/BuyNow?bookId=${encodeURIComponent(bookId)}`,
+                  {
+                    method: "POST",
+                    credentials: "same-origin",
+                    headers: {
+                      "X-Requested-With": "XMLHttpRequest"
+                    }
+                  }
+                );
+
+                if (res.status === 401) {
+                  // chưa login → show login modal
+                  const loginModalEl = document.getElementById("loginModal");
+                  if (loginModalEl) {
+                    new bootstrap.Modal(loginModalEl).show();
+                  }
+                  return;
+                }
+                if (!res.ok) {
+                  const err = await res.json().catch(() => null);
+                  alert(err?.message || "Mua sách thất bại");
+                  return;
+                }
+
+                // thành công ⇒ đọc JSON { success, redirectUrl }
+                const data = await res.json();
+                if (data.success && data.redirectUrl) {
+                  window.location.href = data.redirectUrl;
+                }
+              }
+              catch (ex) {
+                console.error(ex);
+                alert("Có lỗi xảy ra, vui lòng thử lại");
+              }
+            });
+          }
+        });
+    </script>
+}
+
+

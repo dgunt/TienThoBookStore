@@ -59,16 +59,17 @@
                             </a>
                         }
                         <a class="nav-link me-3" href="@Url.Action("Library","Account")">Thư Viện Của Tôi</a>
-                        <a class="nav-link position-relative me-3" href="@Url.Action("Index","Cart")">
-                            <i class="bi-cart-fill"></i>
-                            <span class="badge bg-dark text-white rounded-pill position-absolute top-0 start-100 translate-middle">
-                                @ViewBag.CartCount
-                            </span>
+                        <a class="nav-link position-relative me-3"
+                           href="@Url.Action("Index","Cart")">
+                            <i class="fas fa-shopping-cart"></i> Giỏ hàng
+                            (<span id="cart-count">@await Component.InvokeAsync("CartSummary")</span>)
                         </a>
+
                         <div class="dropdown">
                             <a class="nav-link dropdown-toggle p-0" href="#" id="userDropdown" role="button"
                                data-bs-toggle="dropdown" aria-expanded="false">
                                 <i class="bi-person-circle fs-4"></i>
+                                @* <span class="nav-link me-3">Xin chào, @User.Identity.Name!</span> *@
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                                 <li><a class="dropdown-item" href="@Url.Action("Profile","Account")">Hồ sơ</a></li>

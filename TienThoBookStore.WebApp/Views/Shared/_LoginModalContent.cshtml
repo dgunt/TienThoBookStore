@@ -23,13 +23,55 @@
                 <input asp-for="Password" type="password" class="form-control" />
                 <span asp-validation-for="Password" class="text-danger"></span>
             </div>
-            <div class="form-check mb-3">
-                <input asp-for="RememberMe" class="form-check-input" />
-                <label asp-for="RememberMe" class="form-check-label"></label>
-            </div>
+            <a href="#">Quên mật khẩu? </a>
         </form>
     </div>
     <div class="modal-footer">
         <button type="submit" form="loginForm" class="btn btn-primary">Đăng nhập</button>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+          const form = document.getElementById("loginForm");
+          form.addEventListener("submit", async e => {
+            e.preventDefault();
+
+            // Thu thập dữ liệu
+            const data = {
+              EmailOrUserName: form.EmailOrUserName.value,
+              Password:        form.Password.value,
+              RememberMe:      form.RememberMe.checked
+            };
+
+            // Gửi AJAX
+            const res = await fetch(form.action, {
+              method: "POST",
+              credentials: "same-origin",
+              headers: {
+                "Content-Type":     "application/json",
+                "X-Requested-With": "XMLHttpRequest"
+              },
+              body: JSON.stringify(data)
+            });
+
+            const json = await res.json().catch(() => null);
+
+            if (res.ok && json?.Success) {
+              // Ẩn modal
+              const loginModalEl = document.getElementById("loginModal");
+              bootstrap.Modal.getInstance(loginModalEl).hide();
+              // Thay đổi navbar (lúc này User.Identity.IsAuthenticated đã true)
+              window.location.reload(); // đơn giản: reload page để navbar cập nhật
+            }
+            else {
+              // Hiển thị lỗi từ API
+              const msg = json?.Message || "Đăng nhập thất bại";
+              document.querySelector("[data-valmsg-summary]").textContent = msg;
+            }
+          });
+        });
+    </script>
+}
+
